@@ -13,6 +13,7 @@ interface User {
   lastName?: string;
   businessName?: string;
   businessType?: string | string[];
+  image?: string;
   isEmailVerified?: boolean;
   plan?: "free" | "premium" | "enterprise";
   isSubActive?: boolean;
@@ -75,6 +76,7 @@ export const useAuthStore = create<AuthState>()(
                 businessName: fetchedUser.businessName,
                 businessType: fetchedUser.businessType,
                 isEmailVerified: fetchedUser.isEmailVerified,
+                image: fetchedUser.image,
                 plan: fetchedUser.plan,
                 isSubActive: fetchedUser.isSubActive,
                 trialEndDate: fetchedUser.trialEndDate,
@@ -138,7 +140,7 @@ export const useAuthStore = create<AuthState>()(
               businessName: loggedInUser.businessName,
               businessType: loggedInUser.businessType,
               isEmailVerified: loggedInUser.isEmailVerified,
-
+              image: loggedInUser.image,
               plan: loggedInUser.plan,
               isSubActive: loggedInUser.isSubActive,
               trialEndDate: loggedInUser.trialEndDate,
