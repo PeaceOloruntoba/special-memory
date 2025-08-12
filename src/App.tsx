@@ -10,6 +10,7 @@ import { useEffect } from "react";
 import { useAuthStore } from "./store/useAuthStore";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import VerifyOtp from "./pages/auth/VerifyOtp";
+import ResetPassword from "./pages/auth/ResetPassword";
 
 export default function App() {
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
@@ -27,7 +28,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<Login />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route element={<AdminLayout />}>
           <Route
             path="/admin"
