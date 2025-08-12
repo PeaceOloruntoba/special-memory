@@ -41,6 +41,8 @@ export default function VerifyOtp() {
 
       if (value && index < 3) {
         inputRefs.current[index + 1].current?.focus();
+      } else if (index === 3 && value) {
+        inputRefs.current[index].current?.blur();
       }
     }
   };
@@ -49,11 +51,19 @@ export default function VerifyOtp() {
     e: React.KeyboardEvent<HTMLInputElement>,
     index: number
   ) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
+    if (e.key === "Backspace") {
       const newOtp = [...otp];
-      newOtp[index - 1] = "";
+      if (newOtp[index]) {
+        newOtp[index] = "";
+      } else if (index > 0) {
+        newOtp[index - 1] = "";
+        inputRefs.current[index - 1].current?.focus();
+      }
       setOtp(newOtp);
+    } else if (e.key === "ArrowLeft" && index > 0) {
       inputRefs.current[index - 1].current?.focus();
+    } else if (e.key === "ArrowRight" && index < 3) {
+      inputRefs.current[index + 1].current?.focus();
     }
   };
 
