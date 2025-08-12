@@ -1,18 +1,15 @@
-"use client";
-
 import React, { useState } from "react";
 import {
   FiScissors,
   FiEye,
   FiEyeOff,
   FiArrowRight,
-  FiFacebook,
 } from "react-icons/fi";
 import Label from "../../components/ui/Label";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
 import Checkbox from "../../components/ui/Checkbox";
-import { AiFillGoogleCircle } from "react-icons/ai";
+import { FaFacebook, FaGoogle } from "react-icons/fa";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -31,7 +28,6 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
-        {/* Logo and Header */}
         <div className="text-center">
           <div className="flex items-center justify-center gap-3 mb-6">
             <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
@@ -44,8 +40,6 @@ export default function Login() {
           </h1>
           <p className="text-gray-600">Sign in to your fashion design studio</p>
         </div>
-
-        {/* Login Form */}
         <div className="bg-white rounded-xl shadow-lg p-8">
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Sign In</h2>
@@ -139,8 +133,6 @@ export default function Login() {
             </form>
           </div>
         </div>
-
-        {/* Sign Up Link */}
         <div className="text-center">
           <p className="text-sm text-gray-600">
             Don't have an account?{" "}
@@ -152,8 +144,6 @@ export default function Login() {
             </a>
           </p>
         </div>
-
-        {/* Social Login */}
         <div className="bg-white rounded-xl shadow-lg p-8">
           <div>
             <div className="space-y-3">
@@ -169,11 +159,11 @@ export default function Login() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <Button className="w-full h-10 px-4 py-2 flex items-center justify-center rounded-md text-gray-700 border border-gray-300 bg-transparent hover:bg-gray-100 transition-colors">
-                  <AiFillGoogleCircle className="h-4 w-4 mr-2" />
+                  <FaGoogle className="h-4 w-4 mr-2" />
                   Google
                 </Button>
                 <Button className="w-full h-10 px-4 py-2 flex items-center justify-center rounded-md text-gray-700 border border-gray-300 bg-transparent hover:bg-gray-100 transition-colors">
-                  <FiFacebook className="h-4 w-4 mr-2" />
+                  <FaFacebook className="h-4 w-4 mr-2" />
                   Facebook
                 </Button>
               </div>
