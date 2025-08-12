@@ -70,7 +70,7 @@ export default function Sidebar() {
           const isActive = currentPathname === item.href;
 
           const buttonClasses = classNames(
-            "w-full flex justify-start items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+            "w-full flex justify-start h-10 px-4 py-2 items-center gap-3 rounded-md text-sm font-medium transition-colors",
             isActive
               ? "bg-purple-100 text-purple-700 hover:bg-purple-200"
               : "text-gray-700 hover:bg-gray-100"
