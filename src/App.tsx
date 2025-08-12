@@ -8,6 +8,7 @@ import AdminLayout from "./layout/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import { useEffect } from "react";
 import { useAuthStore } from "./store/useAuthStore";
+import ForgotPassword from "./pages/auth/ForgotPassword";
 
 export default function App() {
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
@@ -23,6 +24,9 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/verify-otp" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<Login />} />
         <Route element={<AdminLayout />}>
           <Route
             path="/admin"
