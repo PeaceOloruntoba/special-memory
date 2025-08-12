@@ -108,7 +108,6 @@ export default function SignUpPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center p-4">
       <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left Side - Branding */}
         <div className="flex flex-col justify-center space-y-8 lg:pr-8">
           <div className="text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start gap-3 mb-6">
@@ -185,9 +184,7 @@ export default function SignUpPage() {
           </div>
         </div>
 
-        {/* Right Side - Form/Plan Selection */}
         <div className="space-y-6">
-          {/* Step 1: Plan Selection */}
           {step === 1 && (
             <div className="bg-white rounded-xl shadow-lg p-8">
               <div className="mb-6">
@@ -266,7 +263,6 @@ export default function SignUpPage() {
             </div>
           )}
 
-          {/* Step 2: Sign Up Form */}
           {step === 2 && (
             <div className="bg-white rounded-xl shadow-lg p-8">
               <div className="mb-6">
