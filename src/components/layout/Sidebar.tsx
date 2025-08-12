@@ -56,6 +56,20 @@ export default function Sidebar() {
       ? `${user.firstName} ${user.lastName}`
       : user?.email || "Guest User";
 
+  const userImage =
+    user?.image ||
+    "https://cdn.vectorstock.com/i/500p/45/59/profile-photo-placeholder-icon-design-in-gray-vector-37114559.jpg";
+
+  let userDisplayPlan;
+  if (user?.isAdmin) {
+    userDisplayPlan = "Admin";
+  } else if (user?.plan) {
+    userDisplayPlan =
+      user.plan.charAt(0).toUpperCase() + user.plan.slice(1) + " Plan";
+  } else {
+    userDisplayPlan = "Basic User";
+  }
+
   return (
     <div className="flex flex-col w-64 bg-white shadow-lg overflow-hidden justify-between min-h-screen">
       <div className="flex items-center justify-center h-16 px-4 bg-gradient-to-r from-purple-600 to-pink-600">
@@ -90,15 +104,15 @@ export default function Sidebar() {
 
       <div className="p-4 border-t border-gray-200">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-            <img src={user?.image} alt="" />
+          <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+            <img src={userImage} className="w-7 h-7 rounded-full" alt="" />
           </div>
           <div>
             <p className="text-sm font-medium text-gray-900">
               {userDisplayName}
             </p>
             <p className="text-xs text-gray-500">
-              {user?.isAdmin ? "Admin" : user?.businessType || "Basic User"}{" "}
+              {user?.isAdmin ? "Admin" : userDisplayPlan}
             </p>
           </div>
         </div>
