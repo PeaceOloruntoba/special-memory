@@ -93,6 +93,7 @@ export default function SignUpPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
     console.log("Sign up data:", { ...formData, selectedPlan });
   };
 
@@ -107,6 +108,7 @@ export default function SignUpPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center p-4">
       <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Left Side - Branding */}
         <div className="flex flex-col justify-center space-y-8 lg:pr-8">
           <div className="text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start gap-3 mb-6">
@@ -123,6 +125,7 @@ export default function SignUpPage() {
               clients, create patterns, and grow their business.
             </p>
           </div>
+
           <div className="space-y-6">
             <div className="flex items-start gap-4">
               <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -138,6 +141,7 @@ export default function SignUpPage() {
                 </p>
               </div>
             </div>
+
             <div className="flex items-start gap-4">
               <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                 <FiCheck className="h-5 w-5 text-green-600" />
@@ -151,6 +155,7 @@ export default function SignUpPage() {
                 </p>
               </div>
             </div>
+
             <div className="flex items-start gap-4">
               <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                 <FiCheck className="h-5 w-5 text-green-600" />
@@ -166,6 +171,7 @@ export default function SignUpPage() {
               </div>
             </div>
           </div>
+
           <div className="text-center lg:text-left">
             <p className="text-sm text-gray-500">
               Already have an account?{" "}
@@ -178,7 +184,10 @@ export default function SignUpPage() {
             </p>
           </div>
         </div>
+
+        {/* Right Side - Form/Plan Selection */}
         <div className="space-y-6">
+          {/* Step 1: Plan Selection */}
           {step === 1 && (
             <div className="bg-white rounded-xl shadow-lg p-8">
               <div className="mb-6">
@@ -256,6 +265,8 @@ export default function SignUpPage() {
               </Button>
             </div>
           )}
+
+          {/* Step 2: Sign Up Form */}
           {step === 2 && (
             <div className="bg-white rounded-xl shadow-lg p-8">
               <div className="mb-6">
@@ -316,6 +327,7 @@ export default function SignUpPage() {
                     />
                   </div>
                 </div>
+
                 <div className="space-y-2">
                   <Label
                     htmlFor="email"
@@ -335,6 +347,7 @@ export default function SignUpPage() {
                     className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
                   />
                 </div>
+
                 <div className="space-y-2">
                   <Label
                     htmlFor="password"
@@ -370,6 +383,7 @@ export default function SignUpPage() {
                     Must be at least 8 characters long
                   </p>
                 </div>
+
                 <div className="space-y-2">
                   <Label
                     htmlFor="businessName"
@@ -387,6 +401,7 @@ export default function SignUpPage() {
                     className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
                   />
                 </div>
+
                 <div className="space-y-2">
                   <Label
                     htmlFor="businessType"
@@ -414,6 +429,7 @@ export default function SignUpPage() {
                     <Option value="other">Other</Option>
                   </Select>
                 </div>
+
                 <div className="space-y-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -444,6 +460,7 @@ export default function SignUpPage() {
                       </a>
                     </Label>
                   </div>
+
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="newsletter"
@@ -464,6 +481,7 @@ export default function SignUpPage() {
                     </Label>
                   </div>
                 </div>
+
                 <Button
                   type="submit"
                   className="w-full h-10 px-4 py-2 flex items-center justify-center rounded-md text-white font-medium bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -472,6 +490,7 @@ export default function SignUpPage() {
                   Create Account & Start{" "}
                   {selectedPlan === "free" ? "Free" : "Trial"}
                 </Button>
+
                 {selectedPlan !== "free" && (
                   <p className="text-xs text-center text-gray-600">
                     Start your 14-day free trial. No credit card required.
@@ -481,6 +500,7 @@ export default function SignUpPage() {
               </form>
             </div>
           )}
+
           <div className="text-center">
             <p className="text-xs text-gray-500">
               By signing up, you agree to our Terms of Service and Privacy
