@@ -31,6 +31,14 @@ export default function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route element={<AdminLayout />}>
           <Route
+            path="/dashboard"
+            element={
+              <AdminGuard>
+                <Dashboard />
+              </AdminGuard>
+            }
+          />
+          <Route
             path="/admin"
             element={
               <AdminGuard>

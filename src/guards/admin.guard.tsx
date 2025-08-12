@@ -18,7 +18,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
     );
   }
 
-  if (!user || !user.isAdmin) {
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
