@@ -1,23 +1,16 @@
 import React from "react";
 
-type ButtonProps = {
-  className?: string;
-  value: React.ReactNode;
-  type?: "button" | "submit" | "reset";
-  onclick?: React.MouseEventHandler<HTMLButtonElement>;
-  [key: string]: any;
-};
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 export default function Button({
   className,
-  value,
-  type,
-  onclick,
+  children,
+  type = "button",
   ...props
 }: ButtonProps) {
   return (
-    <button className={className} type={type} onClick={onclick} {...props}>
-      {value}
+    <button className={className} type={type} {...props}>
+      {children}
     </button>
   );
 }
