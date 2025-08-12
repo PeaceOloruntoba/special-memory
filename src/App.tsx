@@ -1,0 +1,39 @@
+import { BrowserRouter, Routes, Route } from "react-router";
+import { Toaster } from "sonner";
+import Home from "./pages/Home";
+import Login from "./pages/auth/Login";
+import { AdminGuard } from "./guards/admin.guard";
+import Signup from "./pages/auth/Signup";
+import AdminLayout from "./layout/AdminLayout";
+import Dashboard from "./pages/admin/Dashboard";
+import { useEffect } from "react";
+import { useAuthStore } from "./store/useAuthStore";
+
+export default function App() {
+  const initializeAuth = useAuthStore((state) => state.initializeAuth);
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
+  return (
+    <BrowserRouter>
+      <Toaster richColors />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
+        <Route element={<AdminLayout />}>
+          <Route
+            path="/admin"
+            element={
+              <AdminGuard>
+                <Dashboard />
+              </AdminGuard>
+            }
+          />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}
