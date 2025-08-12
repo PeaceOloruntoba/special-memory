@@ -104,7 +104,7 @@ export const useAuthStore = create<AuthState>()(
       register: async (userData) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await api.post("/api/v1/auth/register", userData);
+          const response = await api.post("/api/v1/auth/signup", userData);
           set({
             isLoading: false,
             emailForVerification: userData.email,
@@ -123,7 +123,7 @@ export const useAuthStore = create<AuthState>()(
       login: async (email, password) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await api.post("/api/v1/auth/login", {
+          const response = await api.post("/api/v1/auth/signin", {
             email,
             password,
           });
