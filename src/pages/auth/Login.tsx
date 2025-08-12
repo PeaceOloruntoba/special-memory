@@ -1,15 +1,13 @@
 import React, { useState } from "react";
-import {
-  FiScissors,
-  FiEye,
-  FiEyeOff,
-  FiArrowRight,
-} from "react-icons/fi";
+import { useNavigate } from "react-router";
+import { FiScissors, FiEye, FiEyeOff, FiArrowRight } from "react-icons/fi";
+import { FaFacebook, FaGoogle } from "react-icons/fa";
+import Button from "../../components/ui/Button";
+import { useAuthStore } from "../../store/useAuthStore";
 import Label from "../../components/ui/Label";
 import Input from "../../components/ui/Input";
-import Button from "../../components/ui/Button";
 import Checkbox from "../../components/ui/Checkbox";
-import { FaFacebook, FaGoogle } from "react-icons/fa";
+import Spinner from "../../components/ui/Spinner";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,10 +17,17 @@ export default function Login() {
     rememberMe: false,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { login, isLoading } = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login data:", formData);
+    try {
+      await login(formData.email, formData.password);
+      navigate("/dashboard");
+    } catch (err) {
+      console.error("Login failed:", err);
+    }
   };
 
   return (
@@ -40,6 +45,7 @@ export default function Login() {
           </h1>
           <p className="text-gray-600">Sign in to your fashion design studio</p>
         </div>
+
         <div className="bg-white rounded-xl shadow-lg p-8">
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Sign In</h2>
@@ -66,6 +72,7 @@ export default function Login() {
                   placeholder="jane@example.com"
                   required
                   className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+                  disabled={isLoading}
                 />
               </div>
 
@@ -87,11 +94,13 @@ export default function Login() {
                     placeholder="Enter your password"
                     required
                     className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+                    disabled={isLoading}
                   />
                   <Button
                     type="button"
                     className="absolute right-0 top-0 h-full px-3 py-2 bg-transparent hover:bg-gray-100 rounded-r-md text-gray-500"
                     onClick={() => setShowPassword(!showPassword)}
+                    disabled={isLoading}
                   >
                     {showPassword ? (
                       <FiEyeOff className="h-4 w-4" />
@@ -111,6 +120,7 @@ export default function Login() {
                       setFormData({ ...formData, rememberMe: e.target.checked })
                     }
                     className="h-4 w-4 shrink-0 rounded-sm border border-gray-300 accent-purple-600"
+                    disabled={isLoading}
                   />
                   <Label htmlFor="remember" className="text-sm text-gray-700">
                     Remember me
@@ -118,7 +128,7 @@ export default function Login() {
                 </div>
                 <a
                   href="/forgot-password"
-                  className="text-sm text-purple-600 hover:text-purple-700"
+                  className="text-sm text-purple-600 hover:text-purple-700 font-medium"
                 >
                   Forgot password?
                 </a>
@@ -126,9 +136,16 @@ export default function Login() {
 
               <Button
                 type="submit"
-                className="w-full h-10 px-4 py-2 flex items-center justify-center rounded-md text-white font-medium bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-colors"
+                className="w-full h-10 px-4 py-2 flex items-center justify-center rounded-md text-white font-medium bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isLoading}
               >
-                Sign In <FiArrowRight className="h-4 w-4 ml-2" />
+                {isLoading ? (
+                  <Spinner />
+                ) : (
+                  <>
+                    Sign In <FiArrowRight className="h-4 w-4 ml-2" />
+                  </>
+                )}
               </Button>
             </form>
           </div>
@@ -158,11 +175,17 @@ export default function Login() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <Button className="w-full h-10 px-4 py-2 flex items-center justify-center rounded-md text-gray-700 border border-gray-300 bg-transparent hover:bg-gray-100 transition-colors">
+                <Button
+                  className="w-full h-10 px-4 py-2 flex items-center justify-center rounded-md text-gray-700 border border-gray-300 bg-transparent hover:bg-gray-100 transition-colors"
+                  disabled={isLoading}
+                >
                   <FaGoogle className="h-4 w-4 mr-2" />
                   Google
                 </Button>
-                <Button className="w-full h-10 px-4 py-2 flex items-center justify-center rounded-md text-gray-700 border border-gray-300 bg-transparent hover:bg-gray-100 transition-colors">
+                <Button
+                  className="w-full h-10 px-4 py-2 flex items-center justify-center rounded-md text-gray-700 border border-gray-300 bg-transparent hover:bg-gray-100 transition-colors"
+                  disabled={isLoading}
+                >
                   <FaFacebook className="h-4 w-4 mr-2" />
                   Facebook
                 </Button>
