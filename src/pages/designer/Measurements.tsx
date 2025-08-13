@@ -292,7 +292,7 @@ const Measurements: React.FC = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="flex flex-col gap-3">
             {filteredMeasurements.length > 0 ? (
               filteredMeasurements.map((measurement) => {
                 const client = clients.find(
@@ -308,7 +308,7 @@ const Measurements: React.FC = () => {
                       <div className="flex justify-between items-start">
                         <div>
                           <CardTitle className="text-lg text-card-foreground">
-                            {clientName} - {measurement.garmentType}
+                            {clientName}
                           </CardTitle>
                           <CardDescription>
                             Recorded on{" "}
@@ -323,11 +323,11 @@ const Measurements: React.FC = () => {
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 text-sm">
                         {measurement.measurements.map((m) => (
                           <div key={m.name}>
-                            <span className="font-medium">{m.name}:</span>{" "}
-                            {m.size} {m.unit || "inches"}
+                            <span className="font-medium">{m.name}:</span>
+                            {m.size} {m.unit == "inches" ? '"' : 'cm'}
                           </div>
                         ))}
                       </div>
