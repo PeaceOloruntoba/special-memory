@@ -190,7 +190,7 @@ const EditMeasurementModal: React.FC<EditMeasurementModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg sm:max-w-lg">
+      <div className="w-4/5 rounded-lg bg-white p-6 shadow-lg h-4/5 overflow-y-auto">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">
             Edit Measurement
@@ -208,50 +208,53 @@ const EditMeasurementModal: React.FC<EditMeasurementModalProps> = ({
           Update the measurement details for the selected client and garment.
         </p>
         <div className="mt-4 space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="client">Client</Label>
-            <Select
-              value={clientId}
-              onValueChange={setClientId}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a client" />
-              </SelectTrigger>
-              <SelectContent>
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    {client.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="space-y-2 w-full">
+              <Label htmlFor="client">Client</Label>
+              <Select
+                value={clientId}
+                onValueChange={setClientId}
+                disabled={true}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 w-full">
+              <Label htmlFor="garmentType">Garment Type</Label>
+              <Select
+                value={garmentType}
+                onValueChange={setGarmentType}
+                disabled={isLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select garment type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dress">Dress</SelectItem>
+                  <SelectItem value="suit">Suit</SelectItem>
+                  <SelectItem value="shirt">Shirt</SelectItem>
+                  <SelectItem value="pants">Pants</SelectItem>
+                  <SelectItem value="skirt">Skirt</SelectItem>
+                  <SelectItem value="blouse">Blouse</SelectItem>
+                  <SelectItem value="jacket">Jacket</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="garmentType">Garment Type</Label>
-            <Select
-              value={garmentType}
-              onValueChange={setGarmentType}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select garment type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="dress">Dress</SelectItem>
-                <SelectItem value="suit">Suit</SelectItem>
-                <SelectItem value="shirt">Shirt</SelectItem>
-                <SelectItem value="pants">Pants</SelectItem>
-                <SelectItem value="skirt">Skirt</SelectItem>
-                <SelectItem value="blouse">Blouse</SelectItem>
-                <SelectItem value="jacket">Jacket</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+
           {currentTemplate.length > 0 && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Measurements (inches)</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {currentTemplate.map((field) => (
                   <div key={field} className="space-y-2">
                     <Label htmlFor={field}>{field}</Label>
