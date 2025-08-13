@@ -44,7 +44,7 @@ export default function AdminLayout() {
             <span className="text-xl font-bold text-gray-900">Kunibi</span>
           </div>
         </header>
-        <main className="flex-1 p-4 bg-gray-50 overflow-auto">
+        <main className="flex-1 h-screen overflow-auto">
           <Outlet />
         </main>
       </div>

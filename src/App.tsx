@@ -5,7 +5,7 @@ import Login from "./pages/auth/Login";
 import { AdminGuard } from "./guards/admin.guard";
 import Signup from "./pages/auth/Signup";
 import AdminLayout from "./layout/AdminLayout";
-import Dashboard from "./pages/admin/Dashboard";
+import Dashboard from "./pages/designer/Dashboard";
 import { useEffect } from "react";
 import { useAuthStore } from "./store/useAuthStore";
 import ForgotPassword from "./pages/auth/ForgotPassword";
