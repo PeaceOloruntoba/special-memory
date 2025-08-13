@@ -22,6 +22,7 @@ import Spinner from "../../components/ui/Spinner";
 import AddClientModal from "../../components/clients/AddClientModal";
 import EditClientModal from "../../components/clients/EditClientModal";
 import DeleteClientModal from "../../components/clients/DeleteClientModal";
+import ToggleStatusModal from "../../components/clients/ToggleStatusModal";
 import { useClientStore } from "../../store/useClientStore";
 
 interface Client {
@@ -38,12 +39,13 @@ interface Client {
   lastOrderDate?: string | null;
 }
 
-const ClientsPage: React.FC = () => {
+const Clients: React.FC = () => {
   const { clients, isLoading, error, getAllClients } = useClientStore();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isAddingClient, setIsAddingClient] = useState<boolean>(false);
   const [isEditingClient, setIsEditingClient] = useState<boolean>(false);
   const [isDeletingClient, setIsDeletingClient] = useState<boolean>(false);
+  const [isTogglingStatus, setIsTogglingStatus] = useState<boolean>(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   useEffect(() => {
@@ -62,6 +64,7 @@ const ClientsPage: React.FC = () => {
     setIsAddingClient(false);
     setIsEditingClient(false);
     setIsDeletingClient(false);
+    setIsTogglingStatus(false);
     setSelectedClient(null);
   };
 
@@ -89,16 +92,6 @@ const ClientsPage: React.FC = () => {
       </div>
     );
   }
-
-  const projectsTextChange =
-    clients.projects === 0 || clients.projects === undefined
-      ? "No active projects"
-      : `${clients.projects} active projects`;
-
-  const lastOrderDateChage =
-    clients.lastOrderDate === null || clients.lastOrderDate === undefined
-      ? "Never ordered"
-      : new Date(client.lastOrderDate).toLocaleDateString();
 
   return (
     <div className="p-6 space-y-6 min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
@@ -145,14 +138,22 @@ const ClientsPage: React.FC = () => {
                     <CardTitle className="text-lg text-card-foreground">
                       {client.name}
                     </CardTitle>
-                    <CardDescription>{projectsTextChange}</CardDescription>
+                    <CardDescription>
+                      {client.projects === 0 || client.projects === undefined
+                        ? "No active projects"
+                        : `${client.projects} active projects`}
+                    </CardDescription>
                   </div>
                   <Badge
-                    className={`px-2 text-sm rounded-full ${
+                    className={`px-2 text-sm rounded-full cursor-pointer ${
                       client.status === "active"
-                        ? "bg-black/90 text-white"
-                        : "bg-gray-200 text-gray-800"
+                        ? "bg-black/90 text-white hover:bg-black/80"
+                        : "bg-gray-200 text-gray-800 hover:bg-gray-300"
                     }`}
+                    onClick={() => {
+                      setSelectedClient(client);
+                      setIsTogglingStatus(true);
+                    }}
                   >
                     {client.status}
                   </Badge>
@@ -183,7 +184,10 @@ const ClientsPage: React.FC = () => {
                 <div className="flex justify-between items-center pt-2">
                   <span className="text-xs text-gray-500">
                     Last Order Date:{" "}
-                    {lastOrderDateChage}
+                    {client.lastOrderDate === null ||
+                    client.lastOrderDate === undefined
+                      ? "Never ordered"
+                      : new Date(client.lastOrderDate).toLocaleDateString()}
                   </span>
                   <div className="flex gap-2">
                     <Button
@@ -217,18 +221,27 @@ const ClientsPage: React.FC = () => {
       </div>
 
       {/* Modals */}
-      <AddClientModal isOpen={isAddingClient} onClose={() => onClose()} />
+      <AddClientModal isOpen={isAddingClient} onClose={onClose} />
       {selectedClient && (
         <>
           <EditClientModal
             isOpen={isEditingClient}
-            onClose={() => onClose()}
+            onClose={onClose}
             client={selectedClient}
           />
           <DeleteClientModal
             isOpen={isDeletingClient}
-            onClose={() => onClose()}
+            onClose={onClose}
             client={{ id: selectedClient.id, name: selectedClient.name }}
+          />
+          <ToggleStatusModal
+            isOpen={isTogglingStatus}
+            onClose={onClose}
+            client={{
+              id: selectedClient.id,
+              name: selectedClient.name,
+              status: selectedClient.status,
+            }}
           />
         </>
       )}
@@ -236,4 +249,4 @@ const ClientsPage: React.FC = () => {
   );
 };
 
-export default ClientsPage;
+export default Clients;
