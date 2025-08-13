@@ -1,7 +1,7 @@
-import { useEffect } from "react";
-
+import React, { useEffect } from "react";
 import { FiUsers, FiTrendingUp, FiPlus, FiFileText } from "react-icons/fi";
 import { IoSparklesOutline } from "react-icons/io5";
+import { BiCalendar } from "react-icons/bi";
 import { LuPalette } from "react-icons/lu";
 
 import {
@@ -11,14 +11,13 @@ import {
   CardDescription,
   CardContent,
 } from "../../components/ui/Card";
-
-import { useDashboardStore } from "../../store/useDashboardStore";
-import { useAuthStore } from "../../store/useAuthStore";
 import Button from "../../components/ui/Button";
 import Spinner from "../../components/ui/Spinner";
-import { BiCalendar } from "react-icons/bi";
+import { useDashboardStore } from "../../store/useDashboardStore";
+import { useAuthStore } from "../../store/useAuthStore";
+import { moment } from "../../utils/moment";
 
-export default function Dashboard() {
+const Dashboard: React.FC = () => {
   const { stats, isLoading, error, fetchDashboardStats } = useDashboardStore();
   const { user } = useAuthStore();
 
@@ -28,7 +27,7 @@ export default function Dashboard() {
     }
   }, [user, stats, isLoading, error, fetchDashboardStats]);
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
@@ -37,7 +36,7 @@ export default function Dashboard() {
     }).format(amount);
   };
 
-  const formatPercentage = (percentage: number) => {
+  const formatPercentage = (percentage: number): string => {
     if (percentage === 0) return "0%";
     const sign = percentage > 0 ? "+" : "";
     return `${sign}${percentage.toFixed(0)}%`;
@@ -47,7 +46,7 @@ export default function Dashboard() {
     return (
       <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 p-4 min-h-screen">
         <div className="flex flex-col items-center space-y-4">
-          <Spinner /> {/* Spinner used without className prop */}
+          <Spinner />
           <p className="text-xl text-gray-700">Loading dashboard data...</p>
         </div>
       </div>
@@ -84,7 +83,7 @@ export default function Dashboard() {
     );
   }
 
-  const activeClientsChangeText =
+  const activeClientsChangeText: string =
     stats.activeClients.changeFromLastMonth > 0
       ? `+${stats.activeClients.changeFromLastMonth} from last month`
       : stats.activeClients.changeFromLastMonth < 0
@@ -105,71 +104,65 @@ export default function Dashboard() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Card 1: Active Clients */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-card-foreground">
                 Active Clients
               </CardTitle>
-              <FiUsers className="h-4 w-4 text-muted-foreground" />
+              <FiUsers className="h-4 w-4 text-black/70" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-card-foreground">
                 {stats.activeClients.currentMonthCount}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-black/70">
                 {activeClientsChangeText}
               </p>
             </CardContent>
           </Card>
 
-          {/* Card 2: Active Projects */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-card-foreground">
                 Active Projects
               </CardTitle>
-              <LuPalette className="h-4 w-4 text-muted-foreground" />
+              <LuPalette className="h-4 w-4 text-black/70" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-card-foreground">
                 {stats.activeProjects}
               </div>
-              <p className="text-xs text-muted-foreground">3 due this week</p>{" "}
-              {/* Example static text */}
+              <p className="text-xs text-black/70">3 due this week</p>
             </CardContent>
           </Card>
 
-          {/* Card 3: Patterns Created */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-card-foreground">
                 Patterns Created
               </CardTitle>
-              <IoSparklesOutline className="h-4 w-4 text-muted-foreground" />
+              <IoSparklesOutline className="h-4 w-4 text-black/70" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-card-foreground">
                 {stats.patternsCreated}
               </div>
-              <p className="text-xs text-muted-foreground">+12 this week</p>{" "}
-              {/* Example static text */}
+              <p className="text-xs text-black/70">+12 this week</p>
             </CardContent>
           </Card>
 
-          {/* Card 4: Revenue */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-card-foreground">
                 Revenue
               </CardTitle>
-              <FiTrendingUp className="h-4 w-4 text-muted-foreground" />
+              <FiTrendingUp className="h-4 w-4 text-black/70" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-card-foreground">
                 {formatCurrency(stats.revenue.currentMonth)}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-black/70">
                 {formatPercentage(stats.revenue.changePercentage)} from last
                 month
               </p>
@@ -179,10 +172,9 @@ export default function Dashboard() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {/* Action Card 1: Client Management */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader>
-              <CardTitle className="flex text-card-foreground items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-card-foreground">
                 <FiUsers className="h-5 w-5 text-blue-600" />
                 Client Management
               </CardTitle>
@@ -192,7 +184,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <a href="/clients">
-                <Button className="w-full bg-purple-600 text-white hover:bg-purple-700">
+                <Button className="w-full flex items-center justify-center bg-black/90 text-white hover:bg-black/80 py-2 rounded-md">
                   <FiPlus className="h-4 w-4 mr-2" />
                   Add New Client
                 </Button>
@@ -200,10 +192,9 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Action Card 2: Pattern Designer */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader>
-              <CardTitle className="flex text-card-foreground items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-card-foreground">
                 <LuPalette className="h-5 w-5 text-purple-600" />
                 Pattern Designer
               </CardTitle>
@@ -213,7 +204,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <a href="/patterns">
-                <Button className="w-full bg-purple-600 text-white hover:bg-purple-700">
+                <Button className="w-full flex items-center justify-center bg-black/90 text-white hover:bg-black/80 py-2 rounded-md">
                   <FiPlus className="h-4 w-4 mr-2" />
                   New Pattern
                 </Button>
@@ -221,10 +212,9 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Action Card 3: AI Pattern Generator */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader>
-              <CardTitle className="flex text-card-foreground items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-card-foreground">
                 <IoSparklesOutline className="h-5 w-5 text-pink-600" />
                 AI Pattern Generator
               </CardTitle>
@@ -234,7 +224,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <a href="/ai-patterns">
-                <Button className="w-full bg-purple-600 text-white hover:bg-purple-700">
+                <Button className="w-full flex items-center justify-center bg-black/90 text-white hover:bg-black/80 py-2 rounded-md">
                   <IoSparklesOutline className="h-4 w-4 mr-2" />
                   Generate Pattern
                 </Button>
@@ -245,11 +235,10 @@ export default function Dashboard() {
 
         {/* Recent Activity & Upcoming Deadlines */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Activity Card */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex text-card-foreground items-center gap-2">
-                <BiCalendar className="h-5 w-5 text-muted-foreground" />
+              <CardTitle className="flex items-center gap-2 text-card-foreground">
+                <BiCalendar className="h-5 w-5 text-black/70" />
                 Recent Activity
               </CardTitle>
             </CardHeader>
@@ -258,19 +247,27 @@ export default function Dashboard() {
                 {stats.recentActivity.length > 0 ? (
                   stats.recentActivity.map((activity) => (
                     <div key={activity.id} className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                      <div
+                        className={`w-2 h-2 rounded-full ${
+                          activity.description.includes("client")
+                            ? "bg-green-500"
+                            : activity.description.includes("Pattern")
+                            ? "bg-blue-500"
+                            : "bg-purple-500"
+                        }`}
+                      ></div>
                       <div className="flex-1">
                         <p className="text-sm font-medium text-card-foreground">
                           {activity.description}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(activity.createdAt).toLocaleString()}
+                        <p className="text-xs text-black/70">
+                          {moment(activity.createdAt).toLocaleString()}
                         </p>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-black/70">
                     No recent activity.
                   </p>
                 )}
@@ -278,11 +275,10 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Upcoming Deadlines Card */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex text-card-foreground items-center gap-2">
-                <FiFileText className="h-5 w-5 text-muted-foreground" />
+              <CardTitle className="flex items-center gap-2 text-card-foreground">
+                <FiFileText className="h-5 w-5 text-black/70" />
                 Upcoming Deadlines
               </CardTitle>
             </CardHeader>
@@ -294,17 +290,17 @@ export default function Dashboard() {
                       key={deadline.id}
                       className={`flex items-center justify-between p-3 rounded-lg ${
                         deadline.priority === "high"
-                          ? "bg-red-50 text-red-800"
+                          ? "bg-red-50"
                           : deadline.priority === "medium"
-                          ? "bg-yellow-50 text-yellow-800"
-                          : "bg-green-50 text-green-800"
+                          ? "bg-yellow-50"
+                          : "bg-green-50"
                       }`}
                     >
                       <div>
                         <p className="text-sm font-medium text-card-foreground">
                           {deadline.title} - {deadline.clientName}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-black/70">
                           Due by{" "}
                           {new Date(deadline.dueDate).toLocaleDateString()}
                         </p>
@@ -324,7 +320,7 @@ export default function Dashboard() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-black/70">
                     No upcoming deadlines.
                   </p>
                 )}
@@ -335,4 +331,6 @@ export default function Dashboard() {
       </div>
     </div>
   );
-}
+};
+
+export default Dashboard;
