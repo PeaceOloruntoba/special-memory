@@ -14,18 +14,13 @@ import {
 import Button from "../../components/ui/Button";
 import Spinner from "../../components/ui/Spinner";
 import { useDashboardStore } from "../../store/useDashboardStore";
-import { useAuthStore } from "../../store/useAuthStore";
 import { moment } from "../../utils/moment";
 
 const Dashboard: React.FC = () => {
   const { stats, isLoading, error, fetchDashboardStats } = useDashboardStore();
-  const { user } = useAuthStore();
-
   useEffect(() => {
-    if (user && (!stats || error) && !isLoading) {
-      fetchDashboardStats();
-    }
-  }, [user, stats, isLoading, error, fetchDashboardStats]);
+    fetchDashboardStats();
+  }, []);
 
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat("en-US", {
@@ -169,9 +164,7 @@ const Dashboard: React.FC = () => {
               <div className="text-2xl font-bold text-black/80">
                 {formatCurrency(stats.revenue.currentMonth)}
               </div>
-              <p className="text-xs text-black/70">
-                {revenueChangeText}
-              </p>
+              <p className="text-xs text-black/70">{revenueChangeText}</p>
             </CardContent>
           </Card>
         </div>
