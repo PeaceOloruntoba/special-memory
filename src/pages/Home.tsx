@@ -153,7 +153,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="py-6 px-4 sm:px-6 lg:px-8 bg-white border-t border-gray-200 text-center">
         <p className="text-gray-600">
-          &copy; 2025 DesignPro. All rights reserved.
+          &copy; 2025 BunziTech. All rights reserved.
         </p>
       </footer>
     </div>
