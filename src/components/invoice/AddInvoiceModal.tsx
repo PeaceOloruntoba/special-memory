@@ -101,54 +101,56 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({
           Create a new invoice for a client.
         </p>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="clientId">Client</Label>
-            <Select
-              value={formData.clientId || ""}
-              onValueChange={(value) => {
-                setFormData({
-                  ...formData,
-                  clientId: value || null,
-                });
-              }}
-              disabled={clientsLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a client" />
-              </SelectTrigger>
-              <SelectContent>
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    {client.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="projectId">Project (Optional)</Label>
-            <Select
-              value={formData.projectId || ""}
-              onValueChange={(value) => {
-                setFormData({
-                  ...formData,
-                  projectId: value || null,
-                });
-              }}
-              disabled={projectsLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a project" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">No Project</SelectItem>
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center justify-center space-x-4">
+            <div className="space-y-2 w-full">
+              <Label htmlFor="clientId">Client</Label>
+              <Select
+                value={formData.clientId || ""}
+                onValueChange={(value) => {
+                  setFormData({
+                    ...formData,
+                    clientId: value || null,
+                  });
+                }}
+                disabled={clientsLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 w-full">
+              <Label htmlFor="projectId">Project (Optional)</Label>
+              <Select
+                value={formData.projectId || ""}
+                onValueChange={(value) => {
+                  setFormData({
+                    ...formData,
+                    projectId: value || null,
+                  });
+                }}
+                disabled={projectsLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a project" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No Project</SelectItem>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="invoiceNumber">Invoice Number</Label>
