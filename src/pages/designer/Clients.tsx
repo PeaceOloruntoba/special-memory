@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FiSearch,
   FiPhone,
@@ -18,65 +18,37 @@ import {
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Badge from "../../components/ui/Badge";
+import Spinner from "../../components/ui/Spinner";
 import AddClientModal from "../../components/clients/AddClientModal";
 import EditClientModal from "../../components/clients/EditClientModal";
 import DeleteClientModal from "../../components/clients/DeleteClientModal";
+import { useClientStore } from "../../store/useClientStore";
 
 interface Client {
   id: string;
   name: string;
   email: string;
-  phone: string;
-  address: string;
-  notes: string;
+  phone?: string;
+  address?: string;
+  notes?: string;
   status: "active" | "inactive";
-  projects: number;
-  lastOrder: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-const mockClients: Client[] = [
-  {
-    id: "1",
-    name: "Sarah Johnson",
-    email: "sarah.j@email.com",
-    phone: "+1 (555) 123-4567",
-    address: "123 Fashion Ave, NY 10001",
-    notes: "Prefers elegant, classic styles. Size 8-10.",
-    status: "inactive",
-    projects: 3,
-    lastOrder: "2024-01-15",
-  },
-  {
-    id: "2",
-    name: "Maria Garcia",
-    email: "maria.garcia@email.com",
-    phone: "+1 (555) 987-6543",
-    address: "456 Style St, LA 90210",
-    notes: "Wedding dress client. Very detail-oriented.",
-    status: "active",
-    projects: 1,
-    lastOrder: "2024-01-20",
-  },
-  {
-    id: "3",
-    name: "Emma Wilson",
-    email: "emma.w@email.com",
-    phone: "+1 (555) 456-7890",
-    address: "789 Design Blvd, Chicago 60601",
-    notes: "Casual wear enthusiast. Sustainable fashion advocate.",
-    status: "active",
-    projects: 2,
-    lastOrder: "2024-01-10",
-  },
-];
-
 const ClientsPage: React.FC = () => {
-  const [clients, setClients] = useState<Client[]>(mockClients);
+  const { clients, isLoading, error, getAllClients } = useClientStore();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isAddingClient, setIsAddingClient] = useState<boolean>(false);
   const [isEditingClient, setIsEditingClient] = useState<boolean>(false);
   const [isDeletingClient, setIsDeletingClient] = useState<boolean>(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
+  useEffect(() => {
+    if (!clients.length && !isLoading && !error) {
+      getAllClients();
+    }
+  }, [clients.length, isLoading, error, getAllClients]);
 
   const filteredClients = clients.filter(
     (client) =>
@@ -84,18 +56,30 @@ const ClientsPage: React.FC = () => {
       client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleEditClient = (updatedClient: Client) => {
-    setClients(
-      clients.map((client) =>
-        client.id === updatedClient.id ? updatedClient : client
-      )
+  if (isLoading && !clients.length) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 p-4 min-h-screen">
+        <div className="flex flex-col items-center space-y-4">
+          <Spinner />
+          <p className="text-xl text-gray-700">Loading clients...</p>
+        </div>
+      </div>
     );
-  };
+  }
 
-  const handleDeleteClient = (clientId: string) => {
-    setClients(clients.filter((client) => client.id !== clientId));
-    setIsDeletingClient(false);
-  };
+  if (error && !clients.length) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 p-4 min-h-screen">
+        <p className="text-xl text-red-500 mb-4">Error: {error}</p>
+        <Button
+          className="bg-black/90 text-white hover:bg-black/80 px-4 py-2 rounded-md cursor-pointer"
+          onClick={getAllClients}
+        >
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6 min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
@@ -124,84 +108,92 @@ const ClientsPage: React.FC = () => {
           placeholder="Search clients..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 pr-4 h-10 w-full rounded-md flex rounded-md p-2 border border-gray-300 bg-white text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+          className="pl-10 pr-4 h-10 w-full rounded-md flex p-2 border border-gray-300 bg-white text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
         />
       </div>
 
       {/* Client Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredClients.map((client) => (
-          <Card
-            key={client.id}
-            className="hover:shadow-lg transition-shadow bg-white"
-          >
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-lg text-card-foreground">
-                    {client.name}
-                  </CardTitle>
-                  <CardDescription>
-                    {client.projects} active projects
-                  </CardDescription>
-                </div>
-                <Badge
-                  className={`px-2 text-sm rounded-full ${
-                    client.status === "active"
-                      ? "bg-black/90 text-white"
-                      : "bg-gray-200 text-gray-800"
-                  }`}
-                >
-                  {client.status}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <FiMail className="h-4 w-4" />
-                {client.email}
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <FiPhone className="h-4 w-4" />
-                {client.phone}
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <FiMapPin className="h-4 w-4" />
-                {client.address}
-              </div>
-              {client.notes && (
-                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
-                  {client.notes}
-                </p>
-              )}
-              <div className="flex justify-between items-center pt-2">
-                <span className="text-xs text-gray-500">
-                  Last order: {client.lastOrder}
-                </span>
-                <div className="flex gap-2">
-                  <Button
-                    className="flex rounded-md p-2 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                    onClick={() => {
-                      setSelectedClient(client);
-                      setIsEditingClient(true);
-                    }}
+        {filteredClients.length > 0 ? (
+          filteredClients.map((client) => (
+            <Card
+              key={client.id}
+              className="hover:shadow-lg transition-shadow bg-white"
+            >
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-lg text-card-foreground">
+                      {client.name}
+                    </CardTitle>
+                    <CardDescription>No active projects</CardDescription>
+                  </div>
+                  <Badge
+                    className={`px-2 text-sm rounded-full ${
+                      client.status === "active"
+                        ? "bg-black/90 text-white"
+                        : "bg-gray-200 text-gray-800"
+                    }`}
                   >
-                    <FiEdit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    className="flex rounded-md p-2 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                    onClick={() => {
-                      setSelectedClient(client);
-                      setIsDeletingClient(true);
-                    }}
-                  >
-                    <FiTrash2 className="h-4 w-4" />
-                  </Button>
+                    {client.status}
+                  </Badge>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <FiMail className="h-4 w-4" />
+                  {client.email}
+                </div>
+                {client.phone && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <FiPhone className="h-4 w-4" />
+                    {client.phone}
+                  </div>
+                )}
+                {client.address && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <FiMapPin className="h-4 w-4" />
+                    {client.address}
+                  </div>
+                )}
+                {client.notes && (
+                  <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                    {client.notes}
+                  </p>
+                )}
+                <div className="flex justify-between items-center pt-2">
+                  <span className="text-xs text-gray-500">
+                    Created: {new Date(client.createdAt).toLocaleDateString()}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex rounded-md p-2 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                      onClick={() => {
+                        setSelectedClient(client);
+                        setIsEditingClient(true);
+                      }}
+                    >
+                      <FiEdit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      className="flex rounded-md p-2 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                      onClick={() => {
+                        setSelectedClient(client);
+                        setIsDeletingClient(true);
+                      }}
+                    >
+                      <FiTrash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <p className="text-sm text-gray-600 col-span-full">
+            No clients found.
+          </p>
+        )}
       </div>
 
       {/* Modals */}
@@ -215,13 +207,11 @@ const ClientsPage: React.FC = () => {
             isOpen={isEditingClient}
             onClose={() => setIsEditingClient(false)}
             client={selectedClient}
-            onEditClient={handleEditClient}
           />
           <DeleteClientModal
             isOpen={isDeletingClient}
             onClose={() => setIsDeletingClient(false)}
-            clientName={selectedClient.name}
-            onDeleteClient={() => handleDeleteClient(selectedClient.id)}
+            client={{ id: selectedClient.id, name: selectedClient.name }}
           />
         </>
       )}
