@@ -36,10 +36,10 @@ import { useInvoiceStore } from "../../store/useInvoiceStore";
 import { useClientStore } from "../../store/useClientStore";
 import { useProjectStore } from "../../store/useProjectStore";
 import Spinner from "../../components/ui/Spinner";
-import AddInvoiceModal from "../../components/invoices/AddInvoiceModal";
-import EditInvoiceModal from "../../components/invoices/EditInvoiceModal";
-import DeleteInvoiceModal from "../../components/invoices/DeleteInvoiceModal";
-import DetailsInvoiceModal from "../../components/invoices/DetailsInvoiceModal";
+import AddInvoiceModal from "../../components/invoice/AddInvoiceModal";
+import EditInvoiceModal from "../../components/invoice/EditInvoiceModal";
+import DeleteInvoiceModal from "../../components/invoice/DeleteInvoiceModal";
+import DetailsInvoiceModal from "../../components/invoice/DetailsInvoiceModal";
 
 interface Invoice {
   id: string;
