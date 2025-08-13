@@ -14,6 +14,7 @@ import ResetPassword from "./pages/auth/ResetPassword";
 import Clients from "./pages/designer/Clients";
 import Measurements from "./pages/designer/Measurements";
 import Projects from "./pages/designer/Projects";
+import Default from "./pages/Default";
 
 export default function App() {
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
@@ -61,7 +62,7 @@ export default function App() {
             path="/pattern-design"
             element={
               <AdminGuard>
-                <Measurements />
+                <Default pageTitle="Pattern Design" />
               </AdminGuard>
             }
           />
@@ -69,7 +70,7 @@ export default function App() {
             path="/ai-patterns"
             element={
               <AdminGuard>
-                <Measurements />
+                <Default pageTitle="AI Patterns" />
               </AdminGuard>
             }
           />
@@ -85,7 +86,7 @@ export default function App() {
             path="/invoices"
             element={
               <AdminGuard>
-                <Measurements />
+                <Default pageTitle="Invoices" />
               </AdminGuard>
             }
           />
@@ -93,7 +94,7 @@ export default function App() {
             path="/calendar"
             element={
               <AdminGuard>
-                <Measurements />
+                <Default pageTitle="Calendar" />
               </AdminGuard>
             }
           />
@@ -101,7 +102,7 @@ export default function App() {
             path="/analytics"
             element={
               <AdminGuard>
-                <Measurements />
+                <Default pageTitle="Analytics" />
               </AdminGuard>
             }
           />
@@ -109,7 +110,7 @@ export default function App() {
             path="/pricing"
             element={
               <AdminGuard>
-                <Measurements />
+                <Default pageTitle="Pricing" />
               </AdminGuard>
             }
           />
@@ -117,15 +118,7 @@ export default function App() {
             path="/settings"
             element={
               <AdminGuard>
-                <Measurements />
-              </AdminGuard>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <AdminGuard>
-                <Dashboard />
+                <Default pageTitle="Settings" />
               </AdminGuard>
             }
           />
