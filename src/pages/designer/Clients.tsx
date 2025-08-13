@@ -84,10 +84,6 @@ const ClientsPage: React.FC = () => {
       client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddClient = (client: Client) => {
-    setClients([...clients, client]);
-  };
-
   const handleEditClient = (updatedClient: Client) => {
     setClients(
       clients.map((client) =>
@@ -212,7 +208,6 @@ const ClientsPage: React.FC = () => {
       <AddClientModal
         isOpen={isAddingClient}
         onClose={() => setIsAddingClient(false)}
-        onAddClient={handleAddClient}
       />
       {selectedClient && (
         <>

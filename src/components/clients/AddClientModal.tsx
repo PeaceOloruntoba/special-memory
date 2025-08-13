@@ -4,30 +4,14 @@ import Button from "../ui/Button";
 import Input from "../ui/Input";
 import Label from "../ui/Label";
 import Textarea from "../ui/Textarea";
-
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  notes: string;
-  status: "active" | "inactive";
-  projects: number;
-  lastOrder: string;
-}
+import { useClientStore } from "../../store/useClientStore";
 
 interface AddClientModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddClient: (client: Client) => void;
 }
 
-const AddClientModal: React.FC<AddClientModalProps> = ({
-  isOpen,
-  onClose,
-  onAddClient,
-}) => {
+const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose }) => {
   const [newClient, setNewClient] = useState({
     name: "",
     email: "",
@@ -35,18 +19,22 @@ const AddClientModal: React.FC<AddClientModalProps> = ({
     address: "",
     notes: "",
   });
+  const { addClient, isLoading } = useClientStore();
 
-  const handleAddClient = () => {
-    const client: Client = {
-      id: Date.now().toString(),
-      ...newClient,
-      status: "active",
-      projects: 0,
-      lastOrder: new Date().toISOString().split("T")[0],
-    };
-    onAddClient(client);
-    setNewClient({ name: "", email: "", phone: "", address: "", notes: "" });
-    onClose();
+  const handleAddClient = async () => {
+    try {
+      await addClient({
+        name: newClient.name,
+        email: newClient.email,
+        phone: newClient.phone || undefined,
+        address: newClient.address || undefined,
+        notes: newClient.notes || undefined,
+      });
+      setNewClient({ name: "", email: "", phone: "", address: "", notes: "" });
+      onClose();
+    } catch (error) {
+      // Error handling is managed by the store via toast notifications
+    }
   };
 
   if (!isOpen) return null;
@@ -61,6 +49,7 @@ const AddClientModal: React.FC<AddClientModalProps> = ({
           <button
             onClick={onClose}
             className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            disabled={isLoading}
           >
             <FiX className="h-4 w-4 text-gray-600" />
             <span className="sr-only">Close</span>
@@ -80,6 +69,7 @@ const AddClientModal: React.FC<AddClientModalProps> = ({
               }
               placeholder="Client's full name"
               className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+              disabled={isLoading}
             />
           </div>
           <div className="flex flex-col space-y-2">
@@ -93,6 +83,7 @@ const AddClientModal: React.FC<AddClientModalProps> = ({
               }
               placeholder="client@email.com"
               className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+              disabled={isLoading}
             />
           </div>
           <div className="flex flex-col space-y-2">
@@ -105,6 +96,7 @@ const AddClientModal: React.FC<AddClientModalProps> = ({
               }
               placeholder="+1 (555) 123-4567"
               className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+              disabled={isLoading}
             />
           </div>
           <div className="flex flex-col space-y-2">
@@ -117,6 +109,7 @@ const AddClientModal: React.FC<AddClientModalProps> = ({
               }
               placeholder="Street address"
               className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+              disabled={isLoading}
             />
           </div>
           <div className="flex flex-col space-y-2">
@@ -129,6 +122,7 @@ const AddClientModal: React.FC<AddClientModalProps> = ({
               }
               placeholder="Any special notes about the client..."
               className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+              disabled={isLoading}
             />
           </div>
         </div>
@@ -136,12 +130,14 @@ const AddClientModal: React.FC<AddClientModalProps> = ({
           <Button
             className="border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 px-4 py-2 rounded-md cursor-pointer"
             onClick={onClose}
+            disabled={isLoading}
           >
             Cancel
           </Button>
           <Button
             className="bg-black/90 text-white hover:bg-black/80 px-4 py-2 rounded-md cursor-pointer"
             onClick={handleAddClient}
+            disabled={isLoading}
           >
             Add Client
           </Button>
