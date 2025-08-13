@@ -4,37 +4,47 @@ import Button from "../ui/Button";
 import Input from "../ui/Input";
 import Label from "../ui/Label";
 import Textarea from "../ui/Textarea";
+import { useClientStore } from "../../store/useClientStore";
 
 interface Client {
   id: string;
   name: string;
   email: string;
-  phone: string;
-  address: string;
-  notes: string;
+  phone?: string;
+  address?: string;
+  notes?: string;
   status: "active" | "inactive";
-  projects: number;
-  lastOrder: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface EditClientModalProps {
   isOpen: boolean;
   onClose: () => void;
   client: Client;
-  onEditClient: (client: Client) => void;
 }
 
 const EditClientModal: React.FC<EditClientModalProps> = ({
   isOpen,
   onClose,
   client,
-  onEditClient,
 }) => {
   const [editedClient, setEditedClient] = useState<Client>({ ...client });
+  const { updateClient, isLoading } = useClientStore();
 
-  const handleEditClient = () => {
-    onEditClient(editedClient);
-    onClose();
+  const handleEditClient = async () => {
+    try {
+      await updateClient(client.id, {
+        name: editedClient.name,
+        email: editedClient.email,
+        phone: editedClient.phone || undefined,
+        address: editedClient.address || undefined,
+        notes: editedClient.notes || undefined,
+      });
+      onClose();
+    } catch (error) {
+      // Error handling is managed by the store via toast notifications
+    }
   };
 
   if (!isOpen) return null;
@@ -47,6 +57,7 @@ const EditClientModal: React.FC<EditClientModalProps> = ({
           <button
             onClick={onClose}
             className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            disabled={isLoading}
           >
             <FiX className="h-4 w-4 text-gray-600" />
             <span className="sr-only">Close</span>
@@ -55,8 +66,8 @@ const EditClientModal: React.FC<EditClientModalProps> = ({
         <p className="mt-1 text-sm text-gray-500">
           Update the client's information.
         </p>
-        <div className="mt-4 space-y-4">
-          <div className="space-y-2">
+        <div className="mt-4 flex flex-col space-y-4">
+          <div className="flex flex-col space-y-2">
             <Label htmlFor="name">Name</Label>
             <Input
               id="name"
@@ -66,9 +77,10 @@ const EditClientModal: React.FC<EditClientModalProps> = ({
               }
               placeholder="Client's full name"
               className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+              disabled={isLoading}
             />
           </div>
-          <div className="space-y-2">
+          <div className="flex flex-col space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
@@ -79,42 +91,46 @@ const EditClientModal: React.FC<EditClientModalProps> = ({
               }
               placeholder="client@email.com"
               className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+              disabled={isLoading}
             />
           </div>
-          <div className="space-y-2">
+          <div className="flex flex-col space-y-2">
             <Label htmlFor="phone">Phone</Label>
             <Input
               id="phone"
-              value={editedClient.phone}
+              value={editedClient.phone || ""}
               onChange={(e) =>
                 setEditedClient({ ...editedClient, phone: e.target.value })
               }
               placeholder="+1 (555) 123-4567"
               className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+              disabled={isLoading}
             />
           </div>
-          <div className="space-y-2">
+          <div className="flex flex-col space-y-2">
             <Label htmlFor="address">Address</Label>
             <Input
               id="address"
-              value={editedClient.address}
+              value={editedClient.address || ""}
               onChange={(e) =>
                 setEditedClient({ ...editedClient, address: e.target.value })
               }
               placeholder="Street address"
               className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+              disabled={isLoading}
             />
           </div>
-          <div className="space-y-2">
+          <div className="flex flex-col space-y-2">
             <Label htmlFor="notes">Notes</Label>
             <Textarea
               id="notes"
-              value={editedClient.notes}
+              value={editedClient.notes || ""}
               onChange={(e) =>
                 setEditedClient({ ...editedClient, notes: e.target.value })
               }
               placeholder="Any special notes about the client..."
               className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+              disabled={isLoading}
             />
           </div>
         </div>
@@ -122,12 +138,14 @@ const EditClientModal: React.FC<EditClientModalProps> = ({
           <Button
             className="border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 px-4 py-2 rounded-md cursor-pointer"
             onClick={onClose}
+            disabled={isLoading}
           >
             Cancel
           </Button>
           <Button
             className="bg-black/90 text-white hover:bg-black/80 px-4 py-2 rounded-md cursor-pointer"
             onClick={handleEditClient}
+            disabled={isLoading}
           >
             Save Changes
           </Button>
