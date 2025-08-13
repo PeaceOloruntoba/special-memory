@@ -83,12 +83,17 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  const activeClientsChangeText: string =
+  const activeClientsChangeText =
     stats.activeClients.changeFromLastMonth > 0
       ? `+${stats.activeClients.changeFromLastMonth} from last month`
       : stats.activeClients.changeFromLastMonth < 0
       ? `${stats.activeClients.changeFromLastMonth} from last month`
       : "No change from last month";
+
+  const revenueChangeText =
+    stats.revenue.changePercentage === 0
+      ? "0% from last month"
+      : `${formatPercentage(stats.revenue.changePercentage)} from last month`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex-1">
@@ -106,65 +111,66 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">
+              <CardTitle className="text-sm font-medium text-black/80">
                 Active Clients
               </CardTitle>
               <FiUsers className="h-4 w-4 text-black/70" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">
+              <div className="text-2xl font-bold text-black/80">
                 {stats.activeClients.currentMonthCount}
               </div>
+              <p className="text-xs text-black/70">{activeClientsChangeText}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-black/80">
+                Active Projects
+              </CardTitle>
+              <LuPalette className="h-4 w-4 text-black/70" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-black/80">
+                {stats.activeProjects}
+              </div>
               <p className="text-xs text-black/70">
-                {activeClientsChangeText}
+                {stats.projectsDueThisWeek} due this week
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">
-                Active Projects
-              </CardTitle>
-              <LuPalette className="h-4 w-4 text-black/70" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">
-                {stats.activeProjects}
-              </div>
-              <p className="text-xs text-black/70">3 due this week</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">
+              <CardTitle className="text-sm font-medium text-black/80">
                 Patterns Created
               </CardTitle>
               <IoSparklesOutline className="h-4 w-4 text-black/70" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">
+              <div className="text-2xl font-bold text-black/80">
                 {stats.patternsCreated}
               </div>
-              <p className="text-xs text-black/70">+12 this week</p>
+              <p className="text-xs text-black/70">
+                +{stats.patternsCreatedThisWeek} this week
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">
+              <CardTitle className="text-sm font-medium text-black/80">
                 Revenue
               </CardTitle>
               <FiTrendingUp className="h-4 w-4 text-black/70" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">
+              <div className="text-2xl font-bold text-black/80">
                 {formatCurrency(stats.revenue.currentMonth)}
               </div>
               <p className="text-xs text-black/70">
-                {formatPercentage(stats.revenue.changePercentage)} from last
-                month
+                {revenueChangeText}
               </p>
             </CardContent>
           </Card>
@@ -174,7 +180,7 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-card-foreground">
+              <CardTitle className="flex items-center gap-2 text-black/80">
                 <FiUsers className="h-5 w-5 text-blue-600" />
                 Client Management
               </CardTitle>
@@ -194,7 +200,7 @@ const Dashboard: React.FC = () => {
 
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-card-foreground">
+              <CardTitle className="flex items-center gap-2 text-black/80">
                 <LuPalette className="h-5 w-5 text-purple-600" />
                 Pattern Designer
               </CardTitle>
@@ -214,7 +220,7 @@ const Dashboard: React.FC = () => {
 
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-card-foreground">
+              <CardTitle className="flex items-center gap-2 text-black/80">
                 <IoSparklesOutline className="h-5 w-5 text-pink-600" />
                 AI Pattern Generator
               </CardTitle>
@@ -237,7 +243,7 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-card-foreground">
+              <CardTitle className="flex items-center gap-2 text-black/80">
                 <BiCalendar className="h-5 w-5 text-black/70" />
                 Recent Activity
               </CardTitle>
@@ -257,7 +263,7 @@ const Dashboard: React.FC = () => {
                         }`}
                       ></div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-card-foreground">
+                        <p className="text-sm font-medium text-black/80">
                           {activity.description}
                         </p>
                         <p className="text-xs text-black/70">
@@ -267,9 +273,7 @@ const Dashboard: React.FC = () => {
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-black/70">
-                    No recent activity.
-                  </p>
+                  <p className="text-sm text-black/70">No recent activity.</p>
                 )}
               </div>
             </CardContent>
@@ -277,7 +281,7 @@ const Dashboard: React.FC = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-card-foreground">
+              <CardTitle className="flex items-center gap-2 text-black/80">
                 <FiFileText className="h-5 w-5 text-black/70" />
                 Upcoming Deadlines
               </CardTitle>
@@ -297,7 +301,7 @@ const Dashboard: React.FC = () => {
                       }`}
                     >
                       <div>
-                        <p className="text-sm font-medium text-card-foreground">
+                        <p className="text-sm font-medium text-black/80">
                           {deadline.title} - {deadline.clientName}
                         </p>
                         <p className="text-xs text-black/70">

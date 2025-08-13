@@ -32,7 +32,9 @@ interface ActiveClientsStats {
 interface DashboardStats {
   activeClients: ActiveClientsStats;
   activeProjects: number;
+  projectsDueThisWeek: number;
   patternsCreated: number;
+  patternsCreatedThisWeek: number;
   revenue: RevenueStats;
   upcomingDeadlines: UpcomingDeadline[];
   recentActivity: RecentActivityItem[];
