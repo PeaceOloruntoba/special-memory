@@ -17,7 +17,6 @@ interface Project {
   budget?: number;
   createdAt: string;
   updatedAt: string;
-
   clientName?: string;
 }
 
@@ -67,6 +66,8 @@ export const useProjectStore = create<ProjectState>()(
           const newProject: Project = {
             ...response.data.data.project,
             id: response.data.data.project._id,
+            clientId: response.data.data.project.clientId._id,
+            clientName: response.data.data.project.clientId?.name,
           };
 
           set((state) => ({
@@ -92,14 +93,15 @@ export const useProjectStore = create<ProjectState>()(
         set({ isLoading: true, error: null });
         try {
           const url = clientId
-            ? `/api/v1/clients/${clientId}/projects`
+            ? `/api/v1/projects/${clientId}`
             : "/api/v1/projects";
           const response = await api.get(url);
           const fetchedProjects: Project[] = response.data.data.projects.map(
             (p: any) => ({
               ...p,
               id: p._id,
-              clientName: p.clientId ? p.clientId.name : undefined,
+              clientId: p.clientId?._id,
+              clientName: p.clientId?.name,
             })
           );
 
@@ -131,9 +133,8 @@ export const useProjectStore = create<ProjectState>()(
           const fetchedProject: Project = {
             ...response.data.data.project,
             id: response.data.data.project._id,
-            clientName: response.data.data.project.clientId
-              ? response.data.data.project.clientId.name
-              : undefined,
+            clientId: response.data.data.project.clientId?._id,
+            clientName: response.data.data.project.clientId?.name,
           };
 
           set({ isLoading: false, error: null });
@@ -162,9 +163,8 @@ export const useProjectStore = create<ProjectState>()(
           const updatedProject: Project = {
             ...response.data.data.project,
             id: response.data.data.project._id,
-            clientName: response.data.data.project.clientId
-              ? response.data.data.project.clientId.name
-              : undefined,
+            clientId: response.data.data.project.clientId?._id,
+            clientName: response.data.data.project.clientId?.name,
           };
 
           set((state) => ({
