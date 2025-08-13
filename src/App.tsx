@@ -12,6 +12,7 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import VerifyOtp from "./pages/auth/VerifyOtp";
 import ResetPassword from "./pages/auth/ResetPassword";
 import Clients from "./pages/designer/Clients";
+import Measurements from "./pages/designer/Measurements";
 
 export default function App() {
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
@@ -44,6 +45,14 @@ export default function App() {
             element={
               <AdminGuard>
                 <Clients />
+              </AdminGuard>
+            }
+          />
+          <Route
+            path="/measurements"
+            element={
+              <AdminGuard>
+                <Measurements />
               </AdminGuard>
             }
           />

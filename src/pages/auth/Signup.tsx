@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState } from "react";
 import {
   FiScissors,
@@ -14,12 +12,20 @@ import Label from "../../components/ui/Label";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
 import Checkbox from "../../components/ui/Checkbox";
-import Select from "../../components/ui/Select";
-import Option from "../../components/ui/Option";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "../../components/ui/Select";
 import Badge from "../../components/ui/Badge";
 import { FaCrown } from "react-icons/fa";
+import Spinner from "../../components/ui/Spinner";
+import { useAuthStore } from "../../store/useAuthStore";
 
 export default function SignUpPage() {
+  const { register, isLoading } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<
     "free" | "premium" | "enterprise"
@@ -33,6 +39,7 @@ export default function SignUpPage() {
     businessType: "",
     agreeToTerms: false,
     subscribeToNewsletter: true,
+    selectedPlan: "free" as "free" | "premium" | "enterprise",
   });
   const [step, setStep] = useState(1);
 
@@ -93,7 +100,7 @@ export default function SignUpPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
+    register(formData);
     console.log("Sign up data:", { ...formData, selectedPlan });
   };
 
@@ -406,23 +413,35 @@ export default function SignUpPage() {
                     Business Type
                   </Label>
                   <Select
-                    id="businessType"
                     value={formData.businessType}
-                    onChange={(e) =>
-                      setFormData({ ...formData, businessType: e.target.value })
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, businessType: value })
                     }
-                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950 appearance-none pr-8"
                   >
-                    <Option value="">Select your business type</Option>
-                    <Option value="independent-designer">
-                      Independent Designer
-                    </Option>
-                    <Option value="fashion-studio">Fashion Studio</Option>
-                    <Option value="alterations">Alterations Service</Option>
-                    <Option value="costume-design">Costume Design</Option>
-                    <Option value="bridal-boutique">Bridal Boutique</Option>
-                    <Option value="fashion-school">Fashion School</Option>
-                    <Option value="other">Other</Option>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your business type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="independent-designer">
+                        Independent Designer
+                      </SelectItem>
+                      <SelectItem value="fashion-studio">
+                        Fashion Studio
+                      </SelectItem>
+                      <SelectItem value="alterations">
+                        Alterations Service
+                      </SelectItem>
+                      <SelectItem value="costume-design">
+                        Costume Design
+                      </SelectItem>
+                      <SelectItem value="bridal-boutique">
+                        Bridal Boutique
+                      </SelectItem>
+                      <SelectItem value="fashion-school">
+                        Fashion School
+                      </SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
                   </Select>
                 </div>
 
@@ -483,8 +502,14 @@ export default function SignUpPage() {
                   className="w-full h-10 px-4 py-2 flex items-center justify-center rounded-md text-white font-medium bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={!formData.agreeToTerms}
                 >
-                  Create Account & Start{" "}
-                  {selectedPlan === "free" ? "Free" : "Trial"}
+                  {isLoading ? (
+                    <Spinner />
+                  ) : (
+                    <div>
+                      Create Account & Start{" "}
+                      {selectedPlan === "free" ? "Free" : "Trial"}
+                    </div>
+                  )}
                 </Button>
 
                 {selectedPlan !== "free" && (
