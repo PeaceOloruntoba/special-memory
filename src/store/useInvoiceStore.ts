@@ -10,11 +10,42 @@ interface InvoiceItem {
   amount: number;
 }
 
+interface Client {
+  _id: string;
+  name: string;
+  email: string;
+  address: string;
+  phone: string;
+  status: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+  __v: number;
+}
+
+interface Project {
+  _id: string;
+  name: string;
+  description: string;
+  type: string;
+  status: string;
+  priority: string;
+  budget: number;
+  progress: number;
+  dueDate: string;
+  clientId: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
 interface Invoice {
   id: string;
   userId: string;
-  clientId: string;
-  projectId?: string;
+  clientId: Client;
+  projectId?: Project;
   invoiceNumber: string;
   amount: number;
   status: "draft" | "sent" | "paid" | "overdue";
@@ -22,8 +53,6 @@ interface Invoice {
   items: InvoiceItem[];
   createdAt: string;
   updatedAt: string;
-  clientName?: string;
-  projectName?: string;
 }
 
 interface InvoiceState {
@@ -33,8 +62,8 @@ interface InvoiceState {
   lastFetched: number | null;
 
   addInvoice: (invoiceData: {
-    clientId: string;
-    projectId?: string;
+    clientId: Client;
+    projectId?: Project;
     invoiceNumber: string;
     dueDate: string;
     items: InvoiceItem[];
@@ -67,14 +96,16 @@ export const useInvoiceStore = create<InvoiceState>()(
       addInvoice: async (invoiceData) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await api.post("/api/v1/invoices", invoiceData);
+          const response = await api.post("/api/v1/invoices", {
+            ...invoiceData,
+            clientId: invoiceData.clientId._id,
+            projectId: invoiceData.projectId?._id,
+          });
           const newInvoice: Invoice = {
             ...response.data.data.invoice,
             id: response.data.data.invoice._id,
-            clientId: response.data.data.invoice.clientId?._id,
-            projectId: response.data.data.invoice.projectId?._id,
-            clientName: response.data.data.invoice.clientId?.name,
-            projectName: response.data.data.invoice.projectId?.name,
+            clientId: response.data.data.invoice.clientId,
+            projectId: response.data.data.invoice.projectId,
           };
 
           set((state) => ({
@@ -111,10 +142,8 @@ export const useInvoiceStore = create<InvoiceState>()(
             (inv: any) => ({
               ...inv,
               id: inv._id,
-              clientId: inv.clientId?._id,
-              projectId: inv.projectId?._id,
-              clientName: inv.clientId?.name,
-              projectName: inv.projectId?.name,
+              clientId: inv.clientId,
+              projectId: inv.projectId,
             })
           );
 
@@ -146,10 +175,8 @@ export const useInvoiceStore = create<InvoiceState>()(
           const fetchedInvoice: Invoice = {
             ...response.data.data.invoice,
             id: response.data.data.invoice._id,
-            clientId: response.data.data.invoice.clientId?._id,
-            projectId: response.data.data.invoice.projectId?._id,
-            clientName: response.data.data.invoice.clientId?.name,
-            projectName: response.data.data.invoice.projectId?.name,
+            clientId: response.data.data.invoice.clientId,
+            projectId: response.data.data.invoice.projectId,
           };
 
           set({ isLoading: false, error: null });
@@ -171,17 +198,16 @@ export const useInvoiceStore = create<InvoiceState>()(
       updateInvoice: async (invoiceId, updateData) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await api.patch(
-            `/api/v1/invoices/${invoiceId}`,
-            updateData
-          );
+          const response = await api.patch(`/api/v1/invoices/${invoiceId}`, {
+            ...updateData,
+            clientId: updateData.clientId?._id,
+            projectId: updateData.projectId?._id,
+          });
           const updatedInvoice: Invoice = {
             ...response.data.data.invoice,
             id: response.data.data.invoice._id,
-            clientId: response.data.data.invoice.clientId?._id,
-            projectId: response.data.data.invoice.projectId?._id,
-            clientName: response.data.data.invoice.clientId?.name,
-            projectName: response.data.data.invoice.projectId?.name,
+            clientId: response.data.data.invoice.clientId,
+            projectId: response.data.data.invoice.projectId,
           };
 
           set((state) => ({

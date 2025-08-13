@@ -26,8 +26,8 @@ interface InvoiceItem {
 interface Invoice {
   id: string;
   userId: string;
-  clientId: string;
-  projectId?: string;
+  clientId: any;
+  projectId?: any;
   invoiceNumber: string;
   amount: number;
   status: "draft" | "sent" | "paid" | "overdue";
@@ -54,8 +54,8 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
   const { clients, isLoading: clientsLoading } = useClientStore();
   const { projects, isLoading: projectsLoading } = useProjectStore();
   const [formData, setFormData] = useState({
-    clientId: invoice.clientId,
-    projectId: invoice.projectId || "",
+    clientId: invoice.clientId._id,
+    projectId: invoice.projectId._id || "",
     invoiceNumber: invoice.invoiceNumber,
     dueDate: invoice.dueDate,
     status: invoice.status,
@@ -64,8 +64,8 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
 
   useEffect(() => {
     setFormData({
-      clientId: invoice.clientId,
-      projectId: invoice.projectId || "",
+      clientId: invoice.clientId._id,
+      projectId: invoice.projectId._id || "",
       invoiceNumber: invoice.invoiceNumber,
       dueDate: invoice.dueDate,
       status: invoice.status,

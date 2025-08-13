@@ -40,6 +40,7 @@ import AddInvoiceModal from "../../components/invoice/AddInvoiceModal";
 import EditInvoiceModal from "../../components/invoice/EditInvoiceModal";
 import DeleteInvoiceModal from "../../components/invoice/DeleteInvoiceModal";
 import DetailsInvoiceModal from "../../components/invoice/DetailsInvoiceModal";
+import { jsPDF } from "jspdf";
 
 interface Invoice {
   id: string;
@@ -79,7 +80,8 @@ const Invoices: React.FC = () => {
     getAllClients();
     getAllProjects();
     getAllInvoices();
-  }, []);
+  }, [
+  ]);
 
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch =
@@ -117,6 +119,104 @@ const Invoices: React.FC = () => {
       default:
         return <FiFileText className="h-4 w-4 text-gray-600" />;
     }
+  };
+
+  const downloadInvoice = (invoice: Invoice) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    let y = 20;
+
+    // Header
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("Invoice", pageWidth / 2, y, { align: "center" });
+    y += 10;
+
+    // Invoice Details
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Invoice Number: ${invoice.invoiceNumber}`, margin, y);
+    y += 7;
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, margin, y);
+    y += 7;
+    doc.text(
+      `Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}`,
+      margin,
+      y
+    );
+    y += 10;
+
+    // Business and Client Info
+    doc.setFont("helvetica", "bold");
+    doc.text("From:", margin, y);
+    y += 5;
+    doc.setFont("helvetica", "normal");
+    doc.text("Your Business Name", margin, y);
+    doc.text("Your Business Address", margin, y + 5);
+    doc.text("business@example.com", margin, y + 10);
+    y += 20;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("To:", pageWidth / 2, y - 20);
+    doc.setFont("helvetica", "normal");
+    doc.text(invoice.clientName || "Unknown Client", pageWidth / 2, y - 15);
+    doc.text("Client Address", pageWidth / 2, y - 10);
+    doc.text(invoice.clientId.email, pageWidth / 2, y - 5);
+    y += 10;
+
+    // Items Table
+    doc.setFont("helvetica", "bold");
+    doc.text("Description", margin, y);
+    doc.text("Quantity", margin + 80, y, { align: "right" });
+    doc.text("Rate", margin + 100, y, { align: "right" });
+    doc.text("Amount", margin + 120, y, { align: "right" });
+    y += 5;
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 5;
+
+    doc.setFont("helvetica", "normal");
+    invoice.items.forEach((item) => {
+      doc.text(item.description, margin, y);
+      doc.text(item.quantity.toString(), margin + 80, y, { align: "right" });
+      doc.text(`$${item.rate.toLocaleString()}`, margin + 100, y, {
+        align: "right",
+      });
+      doc.text(`$${item.amount.toLocaleString()}`, margin + 120, y, {
+        align: "right",
+      });
+      y += 7;
+    });
+
+    // Total
+    y += 5;
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 5;
+    doc.setFont("helvetica", "bold");
+    doc.text("Total", margin + 100, y, { align: "right" });
+    doc.text(`$${invoice.amount.toLocaleString()}`, margin + 120, y, {
+      align: "right",
+    });
+    y += 10;
+
+    // Terms
+    doc.setFont("helvetica", "bold");
+    doc.text("Terms and Conditions", margin, y);
+    y += 5;
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      `Payment is due by ${new Date(invoice.dueDate).toLocaleDateString()}.`,
+      margin,
+      y
+    );
+    doc.text(
+      "Please make payments to Your Business Name via bank transfer or check.",
+      margin,
+      y + 5
+    );
+
+    // Save PDF
+    doc.save(`${invoice.invoiceNumber}.pdf`);
   };
 
   if (isLoading && !invoices.length && !clients.length && !projects.length) {
@@ -303,10 +403,7 @@ const Invoices: React.FC = () => {
                     </Button>
                     <Button
                       className="border border-gray-300 text-gray-700 hover:bg-gray-50 p-2 rounded-md cursor-pointer"
-                      onClick={() => {
-                        // Trigger PDF download
-                        // This will be handled by the LaTeX artifact below
-                      }}
+                      onClick={() => downloadInvoice(invoice)}
                     >
                       <FiDownload className="h-4 w-4" />
                     </Button>
@@ -428,10 +525,7 @@ const Invoices: React.FC = () => {
                         </Button>
                         <Button
                           className="border-gray-300 text-gray-700 hover:bg-gray-50 p-2 rounded-md cursor-pointer border"
-                          onClick={() => {
-                            // Trigger PDF download
-                            // This will be handled by the LaTeX artifact below
-                          }}
+                          onClick={() => downloadInvoice(invoice)}
                         >
                           <FiDownload className="h-4 w-4" />
                         </Button>
