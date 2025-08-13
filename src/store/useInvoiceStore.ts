@@ -22,7 +22,6 @@ interface Invoice {
   items: InvoiceItem[];
   createdAt: string;
   updatedAt: string;
-
   clientName?: string;
   projectName?: string;
 }
@@ -72,6 +71,8 @@ export const useInvoiceStore = create<InvoiceState>()(
           const newInvoice: Invoice = {
             ...response.data.data.invoice,
             id: response.data.data.invoice._id,
+            clientId: response.data.data.invoice.clientId?._id,
+            projectId: response.data.data.invoice.projectId?._id,
             clientName: response.data.data.invoice.clientId?.name,
             projectName: response.data.data.invoice.projectId?.name,
           };
@@ -110,6 +111,8 @@ export const useInvoiceStore = create<InvoiceState>()(
             (inv: any) => ({
               ...inv,
               id: inv._id,
+              clientId: inv.clientId?._id,
+              projectId: inv.projectId?._id,
               clientName: inv.clientId?.name,
               projectName: inv.projectId?.name,
             })
@@ -143,6 +146,8 @@ export const useInvoiceStore = create<InvoiceState>()(
           const fetchedInvoice: Invoice = {
             ...response.data.data.invoice,
             id: response.data.data.invoice._id,
+            clientId: response.data.data.invoice.clientId?._id,
+            projectId: response.data.data.invoice.projectId?._id,
             clientName: response.data.data.invoice.clientId?.name,
             projectName: response.data.data.invoice.projectId?.name,
           };
@@ -173,6 +178,8 @@ export const useInvoiceStore = create<InvoiceState>()(
           const updatedInvoice: Invoice = {
             ...response.data.data.invoice,
             id: response.data.data.invoice._id,
+            clientId: response.data.data.invoice.clientId?._id,
+            projectId: response.data.data.invoice.projectId?._id,
             clientName: response.data.data.invoice.clientId?.name,
             projectName: response.data.data.invoice.projectId?.name,
           };
