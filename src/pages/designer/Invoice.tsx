@@ -76,25 +76,10 @@ const Invoices: React.FC = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   useEffect(() => {
-    if (!clients.length && !isLoading && !error) {
-      getAllClients();
-    }
-    if (!projects.length && !isLoading && !error) {
-      getAllProjects();
-    }
-    if (!invoices.length && !isLoading && !error) {
-      getAllInvoices();
-    }
-  }, [
-    clients.length,
-    projects.length,
-    invoices.length,
-    isLoading,
-    error,
-    getAllClients,
-    getAllProjects,
-    getAllInvoices,
-  ]);
+    getAllClients();
+    getAllProjects();
+    getAllInvoices();
+  }, []);
 
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch =

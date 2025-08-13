@@ -224,53 +224,82 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Items</Label>
+            <span className="py-4">Invoice Items</span>
             {formData.items.map((item, index) => (
-              <div key={index} className="flex gap-2 items-center">
-                <Input
-                  placeholder="Description"
-                  value={item.description}
-                  onChange={(e) =>
-                    handleItemChange(index, "description", e.target.value)
-                  }
-                  className="flex-1"
-                  disabled={clientsLoading || projectsLoading}
-                />
-                <Input
-                  type="number"
-                  placeholder="Qty"
-                  value={item.quantity}
-                  onChange={(e) =>
-                    handleItemChange(index, "quantity", Number(e.target.value))
-                  }
-                  className="w-20"
-                  disabled={clientsLoading || projectsLoading}
-                />
-                <Input
-                  type="number"
-                  placeholder="Rate"
-                  value={item.rate}
-                  onChange={(e) =>
-                    handleItemChange(index, "rate", Number(e.target.value))
-                  }
-                  className="w-24"
-                  disabled={clientsLoading || projectsLoading}
-                />
-                <Button
-                  className="border border-gray-300 text-gray-700 hover:bg-gray-50 p-2 rounded-md cursor-pointer"
-                  onClick={() => handleRemoveItem(index)}
-                  disabled={
-                    formData.items.length === 1 ||
-                    clientsLoading ||
-                    projectsLoading
-                  }
-                >
-                  <FiMinus className="h-4 w-4" />
-                </Button>
+              <div key={index} className="flex w-full gap-2 items-center">
+                <div className="flex flex-col w-full">
+                  <Label className="text-xs">Description</Label>
+                  <Input
+                    placeholder="Description"
+                    value={item.description}
+                    onChange={(e) =>
+                      handleItemChange(index, "description", e.target.value)
+                    }
+                    className="flex-1 h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+                    disabled={clientsLoading || projectsLoading}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label className="text-xs">Qty</Label>
+                  <Input
+                    type="number"
+                    placeholder="Qty"
+                    value={item.quantity}
+                    onChange={(e) =>
+                      handleItemChange(
+                        index,
+                        "quantity",
+                        Number(e.target.value)
+                      )
+                    }
+                    className="flex h-10 w-20 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+                    disabled={clientsLoading || projectsLoading}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label className="text-xs">Rate</Label>
+                  <Input
+                    type="number"
+                    placeholder="Rate"
+                    value={item.rate}
+                    onChange={(e) =>
+                      handleItemChange(index, "rate", Number(e.target.value))
+                    }
+                    className="flex h-10 w-20 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+                    disabled={clientsLoading || projectsLoading}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label className="text-xs">Amount</Label>
+                  <Input
+                    type="number"
+                    placeholder="Amount"
+                    value={item.rate * item.quantity}
+                    onChange={(e) =>
+                      handleItemChange(index, "amount", Number(e.target.value))
+                    }
+                    className="flex h-10 w-20 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+                    disabled={clientsLoading || projectsLoading}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label className="text-xs">CLR</Label>
+                  <Button
+                    className="border border-gray-300 text-gray-700 hover:bg-gray-50 p-2 rounded-md cursor-pointer"
+                    onClick={() => handleRemoveItem(index)}
+                    disabled={
+                      formData.items.length === 1 ||
+                      clientsLoading ||
+                      projectsLoading
+                    }
+                  >
+                    <FiMinus className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             ))}
             <Button
-              className="bg-black/90 text-white hover:bg-black/80 px-4 py-2 rounded-md cursor-pointer"
+              className="bg-black/90 text-white hover:bg-black/80 px-4 py-2 rounded-md cursor-pointer flex items-center gap-2"
               onClick={handleAddItem}
               disabled={clientsLoading || projectsLoading}
             >
