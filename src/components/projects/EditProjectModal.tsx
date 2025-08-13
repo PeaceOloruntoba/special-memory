@@ -102,7 +102,7 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full mx-4">
+      <div className="w-4/5 rounded-lg bg-white p-6 shadow-lg h-4/5 overflow-y-auto">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
           Edit Project
         </h2>
