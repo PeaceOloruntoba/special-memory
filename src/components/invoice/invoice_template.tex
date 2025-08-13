@@ -1,0 +1,93 @@
+% Setting up the document class for a professional invoice
+\documentclass[a4paper,12pt]{article}
+
+% Including essential packages for layout and formatting
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{datetime}
+
+% Configuring page geometry for a clean layout
+\geometry{left=2cm,right=2cm,top=2cm,bottom=2cm}
+
+% Setting up headers and footers
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{Invoice \invoiceNumber}
+\fancyhead[R]{\today}
+\fancyfoot[C]{Page \thepage\ of \pageref{LastPage}}
+
+% Defining variables for invoice data (to be replaced dynamically)
+\newcommand{\invoiceNumber}{INV-001}
+\newcommand{\invoiceDate}{\today}
+\newcommand{\dueDate}{2025-09-01}
+\newcommand{\clientName}{Client Name}
+\newcommand{\clientAddress}{Client Address}
+\newcommand{\clientEmail}{client@example.com}
+\newcommand{\businessName}{Your Business Name}
+\newcommand{\businessAddress}{Your Business Address}
+\newcommand{\businessEmail}{business@example.com}
+\newcommand{\totalAmount}{0.00}
+
+% Formatting for currency
+\sisetup{
+  group-separator={,},
+  output-decimal-marker={.},
+}
+
+\begin{document}
+
+% Creating the invoice header
+\begin{center}
+  \textbf{\LARGE Invoice} \\
+  \vspace{0.5cm}
+  \textbf{Invoice Number:} \invoiceNumber \\
+  \textbf{Date:} \invoiceDate \\
+  \textbf{Due Date:} \dueDate
+\end{center}
+
+\vspace{1cm}
+
+% Creating a two-column layout for business and client info
+\begin{minipage}[t]{0.45\textwidth}
+  \textbf{From:} \\
+  \businessName \\
+  \businessAddress \\
+  \businessEmail
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.45\textwidth}
+  \textbf{To:} \\
+  \clientName \\
+  \clientAddress \\
+  \clientEmail
+\end{minipage}
+
+\vspace{1cm}
+
+% Creating the itemized table
+\begin{table}[h]
+  \centering
+  \begin{tabular}{p{6cm} r r r}
+    \toprule
+    \textbf{Description} & \textbf{Quantity} & \textbf{Rate} & \textbf{Amount} \\
+    \midrule
+    % Placeholder for dynamic items
+    \itemDescription & \itemQuantity & \$\itemRate & \$\itemAmount \\
+    \bottomrule
+    \multicolumn{3}{r}{\textbf{Total}} & \$\totalAmount \\
+  \end{tabular}
+\end{table}
+
+\vspace{1cm}
+
+% Adding terms and conditions
+\section*{Terms and Conditions}
+Payment is due by \dueDate. Please make payments to \businessName via bank transfer or check. Late payments may incur additional fees.
+
+\end{document}
