@@ -45,3 +45,26 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface CalendarEvent {
+  id: string;
+  userId: string;
+  clientId?: string;
+  title: string;
+  description?: string;
+  type:
+    | "fitting"
+    | "consultation"
+    | "delivery"
+    | "deadline"
+    | "meeting"
+    | "other";
+  startTime: string;
+  endTime: string;
+  location?: string;
+  status: "scheduled" | "completed" | "cancelled";
+  createdAt: string;
+  updatedAt: string;
+
+  clientName?: string;
+}
