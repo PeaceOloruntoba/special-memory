@@ -13,7 +13,7 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen max-h-screen">
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
@@ -44,7 +44,7 @@ export default function AdminLayout() {
             <span className="text-xl font-bold text-gray-900">Kunibi</span>
           </div>
         </header>
-        <main className="flex-1 h-screen overflow-auto">
+        <main className="flex-1 h-screen overflow-scroll">
           <Outlet />
         </main>
       </div>
