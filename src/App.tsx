@@ -11,6 +11,7 @@ import { useAuthStore } from "./store/useAuthStore";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import VerifyOtp from "./pages/auth/VerifyOtp";
 import ResetPassword from "./pages/auth/ResetPassword";
+import Clients from "./pages/designer/Clients";
 
 export default function App() {
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
@@ -35,6 +36,14 @@ export default function App() {
             element={
               <AdminGuard>
                 <Dashboard />
+              </AdminGuard>
+            }
+          />
+          <Route
+            path="/clients"
+            element={
+              <AdminGuard>
+                <Clients />
               </AdminGuard>
             }
           />
