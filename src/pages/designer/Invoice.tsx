@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import {
   FiSearch,
@@ -41,7 +39,7 @@ import EditInvoiceModal from "../../components/invoice/EditInvoiceModal";
 import DeleteInvoiceModal from "../../components/invoice/DeleteInvoiceModal";
 import DetailsInvoiceModal from "../../components/invoice/DetailsInvoiceModal";
 import { jsPDF } from "jspdf";
-import type { Invoice, Client, Project } from "../../types/types";
+import type { Invoice, Client, Project, InvoiceItem } from "../../types/types";
 
 const Invoices: React.FC = () => {
   const { invoices, isLoading, error, getAllInvoices } = useInvoiceStore();
@@ -164,7 +162,7 @@ const Invoices: React.FC = () => {
     y += 5;
 
     doc.setFont("helvetica", "normal");
-    invoice.items.forEach((item:any) => {
+    invoice.items.forEach((item: InvoiceItem) => {
       doc.text(item.description, margin, y);
       doc.text(item.quantity.toString(), margin + 80, y, { align: "right" });
       doc.text(`$${item.rate.toLocaleString()}`, margin + 100, y, {
