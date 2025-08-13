@@ -13,6 +13,7 @@ import VerifyOtp from "./pages/auth/VerifyOtp";
 import ResetPassword from "./pages/auth/ResetPassword";
 import Clients from "./pages/designer/Clients";
 import Measurements from "./pages/designer/Measurements";
+import Projects from "./pages/designer/Projects";
 
 export default function App() {
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
@@ -50,6 +51,70 @@ export default function App() {
           />
           <Route
             path="/measurements"
+            element={
+              <AdminGuard>
+                <Measurements />
+              </AdminGuard>
+            }
+          />
+          <Route
+            path="/pattern-design"
+            element={
+              <AdminGuard>
+                <Measurements />
+              </AdminGuard>
+            }
+          />
+          <Route
+            path="/ai-patterns"
+            element={
+              <AdminGuard>
+                <Measurements />
+              </AdminGuard>
+            }
+          />
+          <Route
+            path="/projects"
+            element={
+              <AdminGuard>
+                <Projects />
+              </AdminGuard>
+            }
+          />
+          <Route
+            path="/invoices"
+            element={
+              <AdminGuard>
+                <Measurements />
+              </AdminGuard>
+            }
+          />
+          <Route
+            path="/calendar"
+            element={
+              <AdminGuard>
+                <Measurements />
+              </AdminGuard>
+            }
+          />
+          <Route
+            path="/analytics"
+            element={
+              <AdminGuard>
+                <Measurements />
+              </AdminGuard>
+            }
+          />
+          <Route
+            path="/pricing"
+            element={
+              <AdminGuard>
+                <Measurements />
+              </AdminGuard>
+            }
+          />
+          <Route
+            path="/settings"
             element={
               <AdminGuard>
                 <Measurements />
