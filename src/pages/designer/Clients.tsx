@@ -34,6 +34,8 @@ interface Client {
   status: "active" | "inactive";
   createdAt: string;
   updatedAt: string;
+  projects?: number;
+  lastOrderDate?: string | null;
 }
 
 const ClientsPage: React.FC = () => {
@@ -55,6 +57,13 @@ const ClientsPage: React.FC = () => {
       client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const onClose = () => {
+    setIsAddingClient(false);
+    setIsEditingClient(false);
+    setIsDeletingClient(false);
+    setSelectedClient(null);
+  };
 
   if (isLoading && !clients.length) {
     return (
@@ -80,6 +89,16 @@ const ClientsPage: React.FC = () => {
       </div>
     );
   }
+
+  const projectsTextChange =
+    clients.projects === 0 || clients.projects === undefined
+      ? "No active projects"
+      : `${clients.projects} active projects`;
+
+  const lastOrderDateChage =
+    clients.lastOrderDate === null || clients.lastOrderDate === undefined
+      ? "Never ordered"
+      : new Date(client.lastOrderDate).toLocaleDateString();
 
   return (
     <div className="p-6 space-y-6 min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
@@ -126,7 +145,7 @@ const ClientsPage: React.FC = () => {
                     <CardTitle className="text-lg text-card-foreground">
                       {client.name}
                     </CardTitle>
-                    <CardDescription>No active projects</CardDescription>
+                    <CardDescription>{projectsTextChange}</CardDescription>
                   </div>
                   <Badge
                     className={`px-2 text-sm rounded-full ${
@@ -163,7 +182,8 @@ const ClientsPage: React.FC = () => {
                 )}
                 <div className="flex justify-between items-center pt-2">
                   <span className="text-xs text-gray-500">
-                    Created: {new Date(client.createdAt).toLocaleDateString()}
+                    Last Order Date:{" "}
+                    {lastOrderDateChage}
                   </span>
                   <div className="flex gap-2">
                     <Button
@@ -197,20 +217,17 @@ const ClientsPage: React.FC = () => {
       </div>
 
       {/* Modals */}
-      <AddClientModal
-        isOpen={isAddingClient}
-        onClose={() => setIsAddingClient(false)}
-      />
+      <AddClientModal isOpen={isAddingClient} onClose={() => onClose()} />
       {selectedClient && (
         <>
           <EditClientModal
             isOpen={isEditingClient}
-            onClose={() => setIsEditingClient(false)}
+            onClose={() => onClose()}
             client={selectedClient}
           />
           <DeleteClientModal
             isOpen={isDeletingClient}
-            onClose={() => setIsDeletingClient(false)}
+            onClose={() => onClose()}
             client={{ id: selectedClient.id, name: selectedClient.name }}
           />
         </>

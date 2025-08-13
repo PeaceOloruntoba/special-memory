@@ -13,6 +13,8 @@ interface Client {
   status: "active" | "inactive";
   createdAt: string;
   updatedAt: string;
+  projects?: number;
+  lastOrderDate?: string | null;
 }
 
 interface ClientState {
@@ -46,10 +48,6 @@ export const useClientStore = create<ClientState>()(
       error: null,
       lastFetched: null,
 
-      /**
-       * Adds a new client to the database and updates the store.
-       * @param clientData - The data for the new client.
-       */
       addClient: async (clientData) => {
         set({ isLoading: true, error: null });
         try {
@@ -57,6 +55,9 @@ export const useClientStore = create<ClientState>()(
           const newClient: Client = {
             ...response.data.data.client,
             id: response.data.data.client._id,
+
+            projects: response.data.data.client.projects || 0,
+            lastOrderDate: response.data.data.client.lastOrderDate || null,
           };
 
           set((state) => ({
@@ -74,9 +75,6 @@ export const useClientStore = create<ClientState>()(
         }
       },
 
-      /**
-       * Fetches all clients for the authenticated user and updates the store.
-       */
       getAllClients: async () => {
         set({ isLoading: true, error: null });
         try {
@@ -85,6 +83,8 @@ export const useClientStore = create<ClientState>()(
             (client: any) => ({
               ...client,
               id: client._id,
+              projects: client.projects || 0,
+              lastOrderDate: client.lastOrderDate || null,
             })
           );
 
@@ -104,12 +104,6 @@ export const useClientStore = create<ClientState>()(
         }
       },
 
-      /**
-       * Fetches a single client by ID. This primarily validates existence.
-       * The UI usually accesses clients from the 'clients' array fetched by getAllClients.
-       * @param clientId - The ID of the client to fetch.
-       * @returns The client object or null if not found/error.
-       */
       getSingleClient: async (clientId) => {
         set({ isLoading: true, error: null });
         try {
@@ -117,13 +111,11 @@ export const useClientStore = create<ClientState>()(
           const fetchedClient: Client = {
             ...response.data.data.client,
             id: response.data.data.client._id,
+            projects: response.data.data.client.projects || 0,
+            lastOrderDate: response.data.data.client.lastOrderDate || null,
           };
 
-          set({
-            isLoading: false,
-            error: null,
-          });
-
+          set({ isLoading: false, error: null });
           return fetchedClient;
         } catch (error: any) {
           const errorMessage =
@@ -134,11 +126,6 @@ export const useClientStore = create<ClientState>()(
         }
       },
 
-      /**
-       * Updates an existing client in the database and the store.
-       * @param clientId - The ID of the client to update.
-       * @param updateData - The data to update (partial Client object).
-       */
       updateClient: async (clientId, updateData) => {
         set({ isLoading: true, error: null });
         try {
@@ -149,6 +136,8 @@ export const useClientStore = create<ClientState>()(
           const updatedClient: Client = {
             ...response.data.data.client,
             id: response.data.data.client._id,
+            projects: response.data.data.client.projects || 0,
+            lastOrderDate: response.data.data.client.lastOrderDate || null,
           };
 
           set((state) => ({
@@ -168,10 +157,6 @@ export const useClientStore = create<ClientState>()(
         }
       },
 
-      /**
-       * Deletes a client from the database and the store.
-       * @param clientId - The ID of the client to delete.
-       */
       deleteClient: async (clientId) => {
         set({ isLoading: true, error: null });
         try {
@@ -192,9 +177,6 @@ export const useClientStore = create<ClientState>()(
         }
       },
 
-      /**
-       * Clears all client data from the store.
-       */
       clearClients: () => {
         set({ clients: [], isLoading: false, error: null, lastFetched: null });
       },
