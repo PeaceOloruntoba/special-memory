@@ -2,58 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import api from "../utils/api";
 import { toast } from "sonner";
-
-interface InvoiceItem {
-  description: string;
-  quantity: number;
-  rate: number;
-  amount: number;
-}
-
-interface Client {
-  _id: string;
-  name: string;
-  email: string;
-  address: string;
-  phone: string;
-  status: string;
-  notes: string;
-  createdAt: string;
-  updatedAt: string;
-  userId: string;
-  __v: number;
-}
-
-interface Project {
-  _id: string;
-  name: string;
-  description: string;
-  type: string;
-  status: string;
-  priority: string;
-  budget: number;
-  progress: number;
-  dueDate: string;
-  clientId: string;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-}
-
-interface Invoice {
-  id: string;
-  userId: string;
-  clientId: Client;
-  projectId?: Project;
-  invoiceNumber: string;
-  amount: number;
-  status: "draft" | "sent" | "paid" | "overdue";
-  dueDate: string;
-  items: InvoiceItem[];
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Invoice, InvoiceItem } from "../types/types";
 
 interface InvoiceState {
   invoices: Invoice[];
@@ -62,8 +11,8 @@ interface InvoiceState {
   lastFetched: number | null;
 
   addInvoice: (invoiceData: {
-    clientId: Client;
-    projectId?: Project;
+    clientId: string;
+    projectId?: string;
     invoiceNumber: string;
     dueDate: string;
     items: InvoiceItem[];
@@ -75,7 +24,14 @@ interface InvoiceState {
   getSingleInvoice: (invoiceId: string) => Promise<Invoice | null>;
   updateInvoice: (
     invoiceId: string,
-    updateData: Partial<Invoice>
+    updateData: Partial<{
+      clientId: string;
+      projectId?: string;
+      invoiceNumber: string;
+      dueDate: string;
+      status: "draft" | "sent" | "paid" | "overdue";
+      items: InvoiceItem[];
+    }>
   ) => Promise<void>;
   deleteInvoice: (invoiceId: string) => Promise<void>;
   clearInvoices: () => void;
@@ -89,23 +45,15 @@ export const useInvoiceStore = create<InvoiceState>()(
       error: null,
       lastFetched: null,
 
-      /**
-       * Adds a new invoice record to the database and updates the store.
-       * @param invoiceData - The data for the new invoice.
-       */
       addInvoice: async (invoiceData) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await api.post("/api/v1/invoices", {
-            ...invoiceData,
-            clientId: invoiceData.clientId._id,
-            projectId: invoiceData.projectId?._id,
-          });
+          const response = await api.post("/api/v1/invoices", invoiceData);
           const newInvoice: Invoice = {
             ...response.data.data.invoice,
             id: response.data.data.invoice._id,
-            clientId: response.data.data.invoice.clientId,
-            projectId: response.data.data.invoice.projectId,
+            clientId: response.data.data.invoice.clientId._id,
+            projectId: response.data.data.invoice.projectId?._id,
           };
 
           set((state) => ({
@@ -123,10 +71,6 @@ export const useInvoiceStore = create<InvoiceState>()(
         }
       },
 
-      /**
-       * Fetches all invoice records for the authenticated user, optionally filtered by client or project, and updates the store.
-       * @param filterOptions - An object containing optional clientId or projectId for filtering.
-       */
       getAllInvoices: async (filterOptions) => {
         set({ isLoading: true, error: null });
         try {
@@ -142,8 +86,8 @@ export const useInvoiceStore = create<InvoiceState>()(
             (inv: any) => ({
               ...inv,
               id: inv._id,
-              clientId: inv.clientId,
-              projectId: inv.projectId,
+              clientId: inv.clientId._id,
+              projectId: inv.projectId?._id,
             })
           );
 
@@ -163,11 +107,6 @@ export const useInvoiceStore = create<InvoiceState>()(
         }
       },
 
-      /**
-       * Fetches a single invoice record by its ID.
-       * @param invoiceId - The ID of the invoice record to fetch.
-       * @returns The invoice object or null if not found/error.
-       */
       getSingleInvoice: async (invoiceId) => {
         set({ isLoading: true, error: null });
         try {
@@ -175,8 +114,8 @@ export const useInvoiceStore = create<InvoiceState>()(
           const fetchedInvoice: Invoice = {
             ...response.data.data.invoice,
             id: response.data.data.invoice._id,
-            clientId: response.data.data.invoice.clientId,
-            projectId: response.data.data.invoice.projectId,
+            clientId: response.data.data.invoice.clientId._id,
+            projectId: response.data.data.invoice.projectId?._id,
           };
 
           set({ isLoading: false, error: null });
@@ -190,24 +129,18 @@ export const useInvoiceStore = create<InvoiceState>()(
         }
       },
 
-      /**
-       * Updates an existing invoice record in the database and the store.
-       * @param invoiceId - The ID of the invoice record to update.
-       * @param updateData - The data to update (partial Invoice object).
-       */
       updateInvoice: async (invoiceId, updateData) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await api.patch(`/api/v1/invoices/${invoiceId}`, {
-            ...updateData,
-            clientId: updateData.clientId?._id,
-            projectId: updateData.projectId?._id,
-          });
+          const response = await api.patch(
+            `/api/v1/invoices/${invoiceId}`,
+            updateData
+          );
           const updatedInvoice: Invoice = {
             ...response.data.data.invoice,
             id: response.data.data.invoice._id,
-            clientId: response.data.data.invoice.clientId,
-            projectId: response.data.data.invoice.projectId,
+            clientId: response.data.data.invoice.clientId._id,
+            projectId: response.data.data.invoice.projectId?._id,
           };
 
           set((state) => ({
@@ -227,10 +160,6 @@ export const useInvoiceStore = create<InvoiceState>()(
         }
       },
 
-      /**
-       * Deletes an invoice record from the database and the store.
-       * @param invoiceId - The ID of the invoice record to delete.
-       */
       deleteInvoice: async (invoiceId) => {
         set({ isLoading: true, error: null });
         try {
@@ -251,9 +180,6 @@ export const useInvoiceStore = create<InvoiceState>()(
         }
       },
 
-      /**
-       * Clears all invoice data from the store.
-       */
       clearInvoices: () => {
         set({ invoices: [], isLoading: false, error: null, lastFetched: null });
       },
