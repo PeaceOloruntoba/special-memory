@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
@@ -23,6 +21,37 @@ interface InvoiceItem {
   amount: number;
 }
 
+interface Client {
+  _id: string;
+  name: string;
+  email: string;
+  address: string;
+  phone: string;
+  status: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+  __v: number;
+}
+
+interface Project {
+  _id: string;
+  name: string;
+  description: string;
+  type: string;
+  status: string;
+  priority: string;
+  budget: number;
+  progress: number;
+  dueDate: string;
+  clientId: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
 interface AddInvoiceModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -36,8 +65,8 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({
   const { clients, isLoading: clientsLoading } = useClientStore();
   const { projects, isLoading: projectsLoading } = useProjectStore();
   const [formData, setFormData] = useState({
-    clientId: "",
-    projectId: "",
+    clientId: {} as Client,
+    projectId: {} as Project | undefined,
     invoiceNumber: "",
     dueDate: "",
     items: [{ description: "", quantity: 1, rate: 0, amount: 0 }],
@@ -100,49 +129,60 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({
           Create a new invoice for a client.
         </p>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="clientId">Client</Label>
-            <Select
-              value={formData.clientId}
-              onValueChange={(value) =>
-                setFormData({ ...formData, clientId: value })
-              }
-              disabled={clientsLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a client" />
-              </SelectTrigger>
-              <SelectContent>
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    {client.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center justify-center space-x-4">
+            <div className="space-y-2 w-full">
+              <Label htmlFor="clientId">Client</Label>
+              <Select
+                value={formData.clientId?._id || ""}
+                onValueChange={(value) => {
+                  const selectedClient = clients.find((c) => c.id === value);
+                  setFormData({
+                    ...formData,
+                    clientId: selectedClient || ({} as Client),
+                  });
+                }}
+                disabled={clientsLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 w-full">
+              <Label htmlFor="projectId">Project (Optional)</Label>
+              <Select
+                value={formData.projectId?._id || ""}
+                onValueChange={(value) => {
+                  const selectedProject = projects.find((p) => p.id === value);
+                  setFormData({
+                    ...formData,
+                    projectId: selectedProject || undefined,
+                  });
+                }}
+                disabled={projectsLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a project" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No Project</SelectItem>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="projectId">Project (Optional)</Label>
-            <Select
-              value={formData.projectId}
-              onValueChange={(value) =>
-                setFormData({ ...formData, projectId: value })
-              }
-              disabled={projectsLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a project" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">No Project</SelectItem>
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+
           <div className="space-y-2">
             <Label htmlFor="invoiceNumber">Invoice Number</Label>
             <Input
@@ -267,7 +307,7 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({
               disabled={
                 clientsLoading ||
                 projectsLoading ||
-                !formData.clientId ||
+                !formData.clientId._id ||
                 !formData.invoiceNumber ||
                 !formData.dueDate ||
                 formData.items.some(

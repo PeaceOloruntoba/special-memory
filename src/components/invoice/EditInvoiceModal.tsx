@@ -23,11 +23,42 @@ interface InvoiceItem {
   amount: number;
 }
 
+interface Client {
+  _id: string;
+  name: string;
+  email: string;
+  address: string;
+  phone: string;
+  status: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+  __v: number;
+}
+
+interface Project {
+  _id: string;
+  name: string;
+  description: string;
+  type: string;
+  status: string;
+  priority: string;
+  budget: number;
+  progress: number;
+  dueDate: string;
+  clientId: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
 interface Invoice {
   id: string;
   userId: string;
-  clientId: any;
-  projectId?: any;
+  clientId: Client;
+  projectId?: Project;
   invoiceNumber: string;
   amount: number;
   status: "draft" | "sent" | "paid" | "overdue";
@@ -35,8 +66,6 @@ interface Invoice {
   items: InvoiceItem[];
   createdAt: string;
   updatedAt: string;
-  clientName?: string;
-  projectName?: string;
 }
 
 interface EditInvoiceModalProps {
@@ -54,8 +83,8 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
   const { clients, isLoading: clientsLoading } = useClientStore();
   const { projects, isLoading: projectsLoading } = useProjectStore();
   const [formData, setFormData] = useState({
-    clientId: invoice.clientId._id,
-    projectId: invoice.projectId._id || "",
+    clientId: invoice.clientId,
+    projectId: invoice.projectId || undefined,
     invoiceNumber: invoice.invoiceNumber,
     dueDate: invoice.dueDate,
     status: invoice.status,
@@ -64,8 +93,8 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
 
   useEffect(() => {
     setFormData({
-      clientId: invoice.clientId._id,
-      projectId: invoice.projectId._id || "",
+      clientId: invoice.clientId,
+      projectId: invoice.projectId || undefined,
       invoiceNumber: invoice.invoiceNumber,
       dueDate: invoice.dueDate,
       status: invoice.status,
@@ -134,10 +163,14 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
           <div className="space-y-2">
             <Label htmlFor="clientId">Client</Label>
             <Select
-              value={formData.clientId}
-              onValueChange={(value) =>
-                setFormData({ ...formData, clientId: value })
-              }
+              value={formData.clientId?._id || ""}
+              onValueChange={(value) => {
+                const selectedClient = clients.find((c) => c.id === value);
+                setFormData({
+                  ...formData,
+                  clientId: selectedClient || ({} as Client),
+                });
+              }}
               disabled={clientsLoading}
             >
               <SelectTrigger>
@@ -155,10 +188,14 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
           <div className="space-y-2">
             <Label htmlFor="projectId">Project (Optional)</Label>
             <Select
-              value={formData.projectId}
-              onValueChange={(value) =>
-                setFormData({ ...formData, projectId: value })
-              }
+              value={formData.projectId?._id || ""}
+              onValueChange={(value) => {
+                const selectedProject = projects.find((p) => p.id === value);
+                setFormData({
+                  ...formData,
+                  projectId: selectedProject || undefined,
+                });
+              }}
               disabled={projectsLoading}
             >
               <SelectTrigger>
@@ -321,7 +358,7 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
               disabled={
                 clientsLoading ||
                 projectsLoading ||
-                !formData.clientId ||
+                !formData.clientId._id ||
                 !formData.invoiceNumber ||
                 !formData.dueDate ||
                 formData.items.some(

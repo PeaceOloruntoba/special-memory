@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import {
   FiSearch,
@@ -42,11 +40,42 @@ import DeleteInvoiceModal from "../../components/invoice/DeleteInvoiceModal";
 import DetailsInvoiceModal from "../../components/invoice/DetailsInvoiceModal";
 import { jsPDF } from "jspdf";
 
+interface Client {
+  _id: string;
+  name: string;
+  email: string;
+  address: string;
+  phone: string;
+  status: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+  __v: number;
+}
+
+interface Project {
+  _id: string;
+  name: string;
+  description: string;
+  type: string;
+  status: string;
+  priority: string;
+  budget: number;
+  progress: number;
+  dueDate: string;
+  clientId: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
 interface Invoice {
   id: string;
   userId: string;
-  clientId: string;
-  projectId?: string;
+  clientId: Client;
+  projectId?: Project;
   invoiceNumber: string;
   amount: number;
   status: "draft" | "sent" | "paid" | "overdue";
@@ -59,8 +88,6 @@ interface Invoice {
   }[];
   createdAt: string;
   updatedAt: string;
-  clientName?: string;
-  projectName?: string;
 }
 
 const Invoices: React.FC = () => {
@@ -80,13 +107,14 @@ const Invoices: React.FC = () => {
     getAllClients();
     getAllProjects();
     getAllInvoices();
-  }, [
-  ]);
+  }, [getAllClients, getAllProjects, getAllInvoices]);
 
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch =
       invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (invoice.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ??
+      (invoice.clientId?.name
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ??
         false);
     const matchesStatus =
       statusFilter === "all" || invoice.status === statusFilter;
@@ -160,9 +188,9 @@ const Invoices: React.FC = () => {
     doc.setFont("helvetica", "bold");
     doc.text("To:", pageWidth / 2, y - 20);
     doc.setFont("helvetica", "normal");
-    doc.text(invoice.clientName || "Unknown Client", pageWidth / 2, y - 15);
-    doc.text("Client Address", pageWidth / 2, y - 10);
-    doc.text(invoice.clientId.email, pageWidth / 2, y - 5);
+    doc.text(invoice.clientId.name || "Unknown Client", pageWidth / 2, y - 15);
+    doc.text(invoice.clientId.address || "No Address", pageWidth / 2, y - 10);
+    doc.text(invoice.clientId.email || "No Email", pageWidth / 2, y - 5);
     y += 10;
 
     // Items Table
@@ -204,16 +232,33 @@ const Invoices: React.FC = () => {
     doc.text("Terms and Conditions", margin, y);
     y += 5;
     doc.setFont("helvetica", "normal");
-    doc.text(
-      `Payment is due by ${new Date(invoice.dueDate).toLocaleDateString()}.`,
-      margin,
-      y
-    );
-    doc.text(
-      "Please make payments to Your Business Name via bank transfer or check.",
-      margin,
-      y + 5
-    );
+    if (invoice.status === "paid") {
+      doc.text("No refunds. Payment has been received.", margin, y);
+    } else if (invoice.status === "sent") {
+      doc.text(
+        `Payment due by ${new Date(invoice.dueDate).toLocaleDateString()}.`,
+        margin,
+        y
+      );
+      doc.text(
+        "Please make payments to Your Business Name via bank transfer or check.",
+        margin,
+        y + 5
+      );
+      y += 5;
+    } else if (invoice.status === "draft") {
+      doc.text(
+        "This is a draft invoice and is subject to change until sent.",
+        margin,
+        y
+      );
+    } else if (invoice.status === "overdue") {
+      doc.text(
+        "Payment is overdue. Please settle the outstanding amount immediately.",
+        margin,
+        y
+      );
+    }
 
     // Save PDF
     doc.save(`${invoice.invoiceNumber}.pdf`);
@@ -344,14 +389,14 @@ const Invoices: React.FC = () => {
                     </Badge>
                   </div>
                   <CardDescription>
-                    {invoice.projectName || "No Project"}
+                    {invoice.projectId?.name || "No Project"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
                       <FiUser className="h-4 w-4 text-gray-500" />
-                      {invoice.clientName || "Unknown Client"}
+                      {invoice.clientId?.name || "Unknown Client"}
                     </div>
                   </div>
                   <div className="flex items-center justify-between text-sm text-gray-600">
@@ -462,12 +507,12 @@ const Invoices: React.FC = () => {
                           {invoice.invoiceNumber}
                         </h3>
                         <p className="text-gray-600 text-sm">
-                          {invoice.projectName || "No Project"}
+                          {invoice.projectId?.name || "No Project"}
                         </p>
                         <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                           <span className="flex items-center gap-1">
                             <FiUser className="h-4 w-4" />
-                            {invoice.clientName || "Unknown Client"}
+                            {invoice.clientId?.name || "Unknown Client"}
                           </span>
                           <span className="flex items-center gap-1">
                             <FiCalendar className="h-4 w-4" />

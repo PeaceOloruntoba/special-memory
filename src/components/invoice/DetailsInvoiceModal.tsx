@@ -1,5 +1,3 @@
-"use client";
-
 import Button from "../../components/ui/Button";
 import {
   Table,
@@ -17,11 +15,42 @@ interface InvoiceItem {
   amount: number;
 }
 
+interface Client {
+  _id: string;
+  name: string;
+  email: string;
+  address: string;
+  phone: string;
+  status: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+  __v: number;
+}
+
+interface Project {
+  _id: string;
+  name: string;
+  description: string;
+  type: string;
+  status: string;
+  priority: string;
+  budget: number;
+  progress: number;
+  dueDate: string;
+  clientId: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
 interface Invoice {
   id: string;
   userId: string;
-  clientId: string;
-  projectId?: string;
+  clientId: Client;
+  projectId?: Project;
   invoiceNumber: string;
   amount: number;
   status: "draft" | "sent" | "paid" | "overdue";
@@ -29,8 +58,6 @@ interface Invoice {
   items: InvoiceItem[];
   createdAt: string;
   updatedAt: string;
-  clientName?: string;
-  projectName?: string;
 }
 
 interface DetailsInvoiceModalProps {
@@ -66,14 +93,6 @@ const DetailsInvoiceModal: React.FC<DetailsInvoiceModalProps> = ({
                 {invoice.invoiceNumber}
               </div>
               <div>
-                <span className="font-medium">Client:</span>{" "}
-                {invoice.clientName || "Unknown Client"}
-              </div>
-              <div>
-                <span className="font-medium">Project:</span>{" "}
-                {invoice.projectName || "No Project"}
-              </div>
-              <div>
                 <span className="font-medium">Status:</span> {invoice.status}
               </div>
               <div>
@@ -91,6 +110,48 @@ const DetailsInvoiceModal: React.FC<DetailsInvoiceModalProps> = ({
               <div>
                 <span className="font-medium">Updated At:</span>{" "}
                 {new Date(invoice.updatedAt).toLocaleString()}
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-700">
+              Client Information
+            </h3>
+            <div className="mt-2 grid grid-cols-1 gap-2 text-sm text-gray-600">
+              <div>
+                <span className="font-medium">Name:</span>{" "}
+                {invoice.clientId?.name || "Unknown Client"}
+              </div>
+              <div>
+                <span className="font-medium">Email:</span>{" "}
+                {invoice.clientId?.email || "No Email"}
+              </div>
+              <div>
+                <span className="font-medium">Address:</span>{" "}
+                {invoice.clientId?.address || "No Address"}
+              </div>
+              <div>
+                <span className="font-medium">Phone:</span>{" "}
+                {invoice.clientId?.phone || "No Phone"}
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-700">
+              Project Information
+            </h3>
+            <div className="mt-2 grid grid-cols-1 gap-2 text-sm text-gray-600">
+              <div>
+                <span className="font-medium">Name:</span>{" "}
+                {invoice.projectId?.name || "No Project"}
+              </div>
+              <div>
+                <span className="font-medium">Type:</span>{" "}
+                {invoice.projectId?.type || "N/A"}
+              </div>
+              <div>
+                <span className="font-medium">Description:</span>{" "}
+                {invoice.projectId?.description || "N/A"}
               </div>
             </div>
           </div>

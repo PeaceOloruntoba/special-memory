@@ -1,5 +1,3 @@
-"use client";
-
 import Button from "../../components/ui/Button";
 import { useInvoiceStore } from "../../store/useInvoiceStore";
 
@@ -20,9 +18,7 @@ const DeleteInvoiceModal: React.FC<DeleteInvoiceModalProps> = ({
     try {
       await deleteInvoice(invoice.id);
       onClose();
-    } catch (error) {
-      // Error handled via store toast
-    }
+    } catch (error) {}
   };
 
   if (!isOpen) return null;
