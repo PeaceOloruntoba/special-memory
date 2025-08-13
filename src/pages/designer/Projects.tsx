@@ -80,28 +80,28 @@ const Projects: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "planning":
-        return "bg-blue-100 text-blue-800";
+        return "px-3 rounded-full bg-blue-100 text-blue-800";
       case "in-progress":
-        return "bg-yellow-100 text-yellow-800";
+        return "px-3 rounded-full bg-yellow-100 text-yellow-800";
       case "review":
-        return "bg-purple-100 text-purple-800";
+        return "px-3 rounded-full bg-purple-100 text-purple-800";
       case "completed":
-        return "bg-green-100 text-green-800";
+        return "px-3 rounded-full bg-green-100 text-green-800";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "px-3 rounded-full bg-gray-100 text-gray-800";
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":
-        return "bg-red-100 text-red-800";
+        return "px-3 rounded-full bg-red-100 text-red-800";
       case "medium":
-        return "bg-yellow-100 text-yellow-800";
+        return "px-3 rounded-full bg-yellow-100 text-yellow-800";
       case "low":
-        return "bg-green-100 text-green-800";
+        return "px-3 rounded-full bg-green-100 text-green-800";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "px-3 rounded-full bg-gray-100 text-gray-800";
     }
   };
 
@@ -194,40 +194,37 @@ const Projects: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex space-x-2">
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex space-x-2">
+          <Button
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === "grid"
+                ? "bg-black/90 text-white hover:bg-black/80"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+            }`}
+            onClick={() => {
+              setActiveTab("grid");
+              resetForm();
+            }}
+          >
+            Grid View
+          </Button>
+          <Button
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === "list"
+                ? "bg-black/90 text-white hover:bg-black/80"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+            }`}
+            onClick={() => {
+              setActiveTab("list");
+              resetForm();
+            }}
+          >
+            List View
+          </Button>
+        </div>
         <Button
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === "grid"
-              ? "bg-black/90 text-white hover:bg-black/80"
-              : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-          }`}
-          onClick={() => {
-            setActiveTab("grid");
-            resetForm();
-          }}
-        >
-          Grid View
-        </Button>
-        <Button
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === "list"
-              ? "bg-black/90 text-white hover:bg-black/80"
-              : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-          }`}
-          onClick={() => {
-            setActiveTab("list");
-            resetForm();
-          }}
-        >
-          List View
-        </Button>
-        <Button
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === "add"
-              ? "bg-black/90 text-white hover:bg-black/80"
-              : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-          }`}
-          onClick={() => setActiveTab("add")}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors bg-black/90 text-white hover:bg-black/80`}
         >
           Add Project
         </Button>
@@ -246,8 +243,12 @@ const Projects: React.FC = () => {
                 className="pl-10 h-10 w-full rounded-md border border-gray-300 bg-white text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
               />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-48">
+            <Select
+              value={statusFilter}
+              onValueChange={setStatusFilter}
+              className="w-48"
+            >
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
@@ -360,7 +361,7 @@ const Projects: React.FC = () => {
           </div>
           <div className="space-y-4">
             {filteredProjects.map((project) => (
-              <Card key={project.id} className="bg-white">
+              <Card key={project.id} className="bg-white py-4">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4 flex-1">
@@ -400,7 +401,7 @@ const Projects: React.FC = () => {
                             {project.priority}
                           </Badge>
                         </div>
-                        <div className="w-32">
+                        <div className="w-full">
                           <div className="flex justify-between text-sm mb-1">
                             <span>Progress</span>
                             <span>{project.progress}%</span>

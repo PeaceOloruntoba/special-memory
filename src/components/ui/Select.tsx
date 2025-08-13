@@ -20,6 +20,7 @@ interface SelectProps {
   onValueChange: (value: string) => void;
   children: ReactNode;
   disabled?: boolean;
+  className?: string;
 }
 
 const Select: React.FC<SelectProps> = ({
@@ -27,6 +28,7 @@ const Select: React.FC<SelectProps> = ({
   onValueChange,
   children,
   disabled,
+  className = "",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -35,7 +37,7 @@ const Select: React.FC<SelectProps> = ({
       <div
         className={`relative ${
           disabled ? "opacity-50 cursor-not-allowed" : ""
-        }`}
+        } ${className}`}
       >
         {children}
       </div>
