@@ -5,6 +5,7 @@ import Input from "../ui/Input";
 import Label from "../ui/Label";
 import Textarea from "../ui/Textarea";
 import { useClientStore } from "../../store/useClientStore";
+import Spinner from "../ui/Spinner";
 
 interface Client {
   id: string;
@@ -147,7 +148,7 @@ const EditClientModal: React.FC<EditClientModalProps> = ({
             onClick={handleEditClient}
             disabled={isLoading}
           >
-            Save Changes
+            {isLoading ? <Spinner /> : "Save Changes"}
           </Button>
         </div>
       </div>

@@ -5,6 +5,7 @@ import Input from "../ui/Input";
 import Label from "../ui/Label";
 import Textarea from "../ui/Textarea";
 import { useClientStore } from "../../store/useClientStore";
+import Spinner from "../ui/Spinner";
 
 interface AddClientModalProps {
   isOpen: boolean;
@@ -139,7 +140,7 @@ const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose }) => {
             onClick={handleAddClient}
             disabled={isLoading}
           >
-            Add Client
+            {isLoading ? <Spinner /> : "Add Client"}
           </Button>
         </div>
       </div>
