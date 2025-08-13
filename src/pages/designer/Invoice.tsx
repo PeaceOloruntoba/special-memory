@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import {
   FiSearch,
@@ -39,56 +41,7 @@ import EditInvoiceModal from "../../components/invoice/EditInvoiceModal";
 import DeleteInvoiceModal from "../../components/invoice/DeleteInvoiceModal";
 import DetailsInvoiceModal from "../../components/invoice/DetailsInvoiceModal";
 import { jsPDF } from "jspdf";
-
-interface Client {
-  _id: string;
-  name: string;
-  email: string;
-  address: string;
-  phone: string;
-  status: string;
-  notes: string;
-  createdAt: string;
-  updatedAt: string;
-  userId: string;
-  __v: number;
-}
-
-interface Project {
-  _id: string;
-  name: string;
-  description: string;
-  type: string;
-  status: string;
-  priority: string;
-  budget: number;
-  progress: number;
-  dueDate: string;
-  clientId: string;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-}
-
-interface Invoice {
-  id: string;
-  userId: string;
-  clientId: Client;
-  projectId?: Project;
-  invoiceNumber: string;
-  amount: number;
-  status: "draft" | "sent" | "paid" | "overdue";
-  dueDate: string;
-  items: {
-    description: string;
-    quantity: number;
-    rate: number;
-    amount: number;
-  }[];
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Invoice, Client, Project } from "../../types/types";
 
 const Invoices: React.FC = () => {
   const { invoices, isLoading, error, getAllInvoices } = useInvoiceStore();
@@ -109,12 +62,17 @@ const Invoices: React.FC = () => {
     getAllInvoices();
   }, [getAllClients, getAllProjects, getAllInvoices]);
 
-  const filteredInvoices = invoices.filter((invoice) => {
+  // Join invoices with clients and projects to access name, email, etc.
+  const enrichedInvoices = invoices.map((invoice) => ({
+    ...invoice,
+    client: clients.find((client) => client.id === invoice.clientId),
+    project: projects.find((project) => project.id === invoice.projectId),
+  }));
+
+  const filteredInvoices = enrichedInvoices.filter((invoice) => {
     const matchesSearch =
       invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (invoice.clientId?.name
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ??
+      (invoice.client?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ??
         false);
     const matchesStatus =
       statusFilter === "all" || invoice.status === statusFilter;
@@ -149,7 +107,9 @@ const Invoices: React.FC = () => {
     }
   };
 
-  const downloadInvoice = (invoice: Invoice) => {
+  const downloadInvoice = (
+    invoice: Invoice & { client?: Client; project?: Project }
+  ) => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 20;
@@ -188,9 +148,9 @@ const Invoices: React.FC = () => {
     doc.setFont("helvetica", "bold");
     doc.text("To:", pageWidth / 2, y - 20);
     doc.setFont("helvetica", "normal");
-    doc.text(invoice.clientId.name || "Unknown Client", pageWidth / 2, y - 15);
-    doc.text(invoice.clientId.address || "No Address", pageWidth / 2, y - 10);
-    doc.text(invoice.clientId.email || "No Email", pageWidth / 2, y - 5);
+    doc.text(invoice.client?.name || "Unknown Client", pageWidth / 2, y - 15);
+    doc.text(invoice.client?.address || "No Address", pageWidth / 2, y - 10);
+    doc.text(invoice.client?.email || "No Email", pageWidth / 2, y - 5);
     y += 10;
 
     // Items Table
@@ -204,7 +164,7 @@ const Invoices: React.FC = () => {
     y += 5;
 
     doc.setFont("helvetica", "normal");
-    invoice.items.forEach((item) => {
+    invoice.items.forEach((item:any) => {
       doc.text(item.description, margin, y);
       doc.text(item.quantity.toString(), margin + 80, y, { align: "right" });
       doc.text(`$${item.rate.toLocaleString()}`, margin + 100, y, {
@@ -389,14 +349,14 @@ const Invoices: React.FC = () => {
                     </Badge>
                   </div>
                   <CardDescription>
-                    {invoice.projectId?.name || "No Project"}
+                    {invoice.project?.name || "No Project"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
                       <FiUser className="h-4 w-4 text-gray-500" />
-                      {invoice.clientId?.name || "Unknown Client"}
+                      {invoice.client?.name || "Unknown Client"}
                     </div>
                   </div>
                   <div className="flex items-center justify-between text-sm text-gray-600">
@@ -413,7 +373,9 @@ const Invoices: React.FC = () => {
                     <Button
                       className="flex-1 bg-black/90 text-white hover:bg-black/80 py-2 rounded-md cursor-pointer"
                       onClick={() => {
-                        setSelectedInvoice(invoice);
+                        // Pass only the Invoice properties
+                        const { client, project, ...baseInvoice } = invoice;
+                        setSelectedInvoice(baseInvoice);
                         setIsDetailsModalOpen(true);
                         setIsEditModalOpen(false);
                         setIsDeleteModalOpen(false);
@@ -425,7 +387,9 @@ const Invoices: React.FC = () => {
                     <Button
                       className="border border-gray-300 text-gray-700 hover:bg-gray-50 p-2 rounded-md cursor-pointer"
                       onClick={() => {
-                        setSelectedInvoice(invoice);
+                        // Pass only the Invoice properties
+                        const { client, project, ...baseInvoice } = invoice;
+                        setSelectedInvoice(baseInvoice);
                         setIsEditModalOpen(true);
                         setIsDetailsModalOpen(false);
                         setIsDeleteModalOpen(false);
@@ -437,7 +401,9 @@ const Invoices: React.FC = () => {
                     <Button
                       className="border border-gray-300 text-gray-700 hover:bg-gray-50 p-2 rounded-md cursor-pointer"
                       onClick={() => {
-                        setSelectedInvoice(invoice);
+                        // Pass only the Invoice properties
+                        const { client, project, ...baseInvoice } = invoice;
+                        setSelectedInvoice(baseInvoice);
                         setIsDeleteModalOpen(true);
                         setIsDetailsModalOpen(false);
                         setIsEditModalOpen(false);
@@ -507,12 +473,12 @@ const Invoices: React.FC = () => {
                           {invoice.invoiceNumber}
                         </h3>
                         <p className="text-gray-600 text-sm">
-                          {invoice.projectId?.name || "No Project"}
+                          {invoice.project?.name || "No Project"}
                         </p>
                         <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                           <span className="flex items-center gap-1">
                             <FiUser className="h-4 w-4" />
-                            {invoice.clientId?.name || "Unknown Client"}
+                            {invoice.client?.name || "Unknown Client"}
                           </span>
                           <span className="flex items-center gap-1">
                             <FiCalendar className="h-4 w-4" />
@@ -535,7 +501,9 @@ const Invoices: React.FC = () => {
                         <Button
                           className="bg-black/90 text-white hover:bg-black/80 py-2 px-6 rounded-md cursor-pointer"
                           onClick={() => {
-                            setSelectedInvoice(invoice);
+                            // Pass only the Invoice properties
+                            const { client, project, ...baseInvoice } = invoice;
+                            setSelectedInvoice(baseInvoice);
                             setIsDetailsModalOpen(true);
                             setIsEditModalOpen(false);
                             setIsDeleteModalOpen(false);
@@ -547,7 +515,9 @@ const Invoices: React.FC = () => {
                         <Button
                           className="border-gray-300 text-gray-700 hover:bg-gray-50 p-2 rounded-md cursor-pointer border"
                           onClick={() => {
-                            setSelectedInvoice(invoice);
+                            // Pass only the Invoice properties
+                            const { client, project, ...baseInvoice } = invoice;
+                            setSelectedInvoice(baseInvoice);
                             setIsEditModalOpen(true);
                             setIsDetailsModalOpen(false);
                             setIsDeleteModalOpen(false);
@@ -559,7 +529,9 @@ const Invoices: React.FC = () => {
                         <Button
                           className="border-gray-300 text-gray-700 hover:bg-gray-50 p-2 rounded-md cursor-pointer border"
                           onClick={() => {
-                            setSelectedInvoice(invoice);
+                            // Pass only the Invoice properties
+                            const { client, project, ...baseInvoice } = invoice;
+                            setSelectedInvoice(baseInvoice);
                             setIsDeleteModalOpen(true);
                             setIsDetailsModalOpen(false);
                             setIsEditModalOpen(false);

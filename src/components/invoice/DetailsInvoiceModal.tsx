@@ -1,64 +1,9 @@
+"use client";
+
+import { useClientStore } from "../../store/useClientStore";
+import { useProjectStore } from "../../store/useProjectStore";
 import Button from "../../components/ui/Button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/Table";
-
-interface InvoiceItem {
-  description: string;
-  quantity: number;
-  rate: number;
-  amount: number;
-}
-
-interface Client {
-  _id: string;
-  name: string;
-  email: string;
-  address: string;
-  phone: string;
-  status: string;
-  notes: string;
-  createdAt: string;
-  updatedAt: string;
-  userId: string;
-  __v: number;
-}
-
-interface Project {
-  _id: string;
-  name: string;
-  description: string;
-  type: string;
-  status: string;
-  priority: string;
-  budget: number;
-  progress: number;
-  dueDate: string;
-  clientId: string;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-}
-
-interface Invoice {
-  id: string;
-  userId: string;
-  clientId: Client;
-  projectId?: Project;
-  invoiceNumber: string;
-  amount: number;
-  status: "draft" | "sent" | "paid" | "overdue";
-  dueDate: string;
-  items: InvoiceItem[];
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Invoice, InvoiceItem } from "../../types/types";
 
 interface DetailsInvoiceModalProps {
   isOpen: boolean;
@@ -71,6 +16,12 @@ const DetailsInvoiceModal: React.FC<DetailsInvoiceModalProps> = ({
   onClose,
   invoice,
 }) => {
+  const { clients } = useClientStore();
+  const { projects } = useProjectStore();
+
+  const client = clients.find((c) => c.id === invoice.clientId);
+  const project = projects.find((p) => p.id === invoice.projectId);
+
   if (!isOpen) return null;
 
   return (
@@ -79,108 +30,65 @@ const DetailsInvoiceModal: React.FC<DetailsInvoiceModalProps> = ({
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
           Invoice Details
         </h2>
-        <p className="text-sm text-gray-500 mb-4">
-          Details for invoice {invoice.invoiceNumber}
-        </p>
         <div className="space-y-4">
           <div>
             <h3 className="text-sm font-medium text-gray-700">
-              Invoice Information
+              Invoice Number
             </h3>
-            <div className="mt-2 grid grid-cols-1 gap-2 text-sm text-gray-600">
-              <div>
-                <span className="font-medium">Invoice Number:</span>{" "}
-                {invoice.invoiceNumber}
-              </div>
-              <div>
-                <span className="font-medium">Status:</span> {invoice.status}
-              </div>
-              <div>
-                <span className="font-medium">Due Date:</span>{" "}
-                {new Date(invoice.dueDate).toLocaleDateString()}
-              </div>
-              <div>
-                <span className="font-medium">Total Amount:</span> $
-                {invoice.amount.toLocaleString()}
-              </div>
-              <div>
-                <span className="font-medium">Created At:</span>{" "}
-                {new Date(invoice.createdAt).toLocaleString()}
-              </div>
-              <div>
-                <span className="font-medium">Updated At:</span>{" "}
-                {new Date(invoice.updatedAt).toLocaleString()}
-              </div>
-            </div>
+            <p className="text-gray-900">{invoice.invoiceNumber}</p>
           </div>
           <div>
-            <h3 className="text-sm font-medium text-gray-700">
-              Client Information
-            </h3>
-            <div className="mt-2 grid grid-cols-1 gap-2 text-sm text-gray-600">
-              <div>
-                <span className="font-medium">Name:</span>{" "}
-                {invoice.clientId?.name || "Unknown Client"}
-              </div>
-              <div>
-                <span className="font-medium">Email:</span>{" "}
-                {invoice.clientId?.email || "No Email"}
-              </div>
-              <div>
-                <span className="font-medium">Address:</span>{" "}
-                {invoice.clientId?.address || "No Address"}
-              </div>
-              <div>
-                <span className="font-medium">Phone:</span>{" "}
-                {invoice.clientId?.phone || "No Phone"}
-              </div>
-            </div>
+            <h3 className="text-sm font-medium text-gray-700">Client</h3>
+            <p className="text-gray-900">{client?.name || "Unknown Client"}</p>
           </div>
           <div>
-            <h3 className="text-sm font-medium text-gray-700">
-              Project Information
-            </h3>
-            <div className="mt-2 grid grid-cols-1 gap-2 text-sm text-gray-600">
-              <div>
-                <span className="font-medium">Name:</span>{" "}
-                {invoice.projectId?.name || "No Project"}
-              </div>
-              <div>
-                <span className="font-medium">Type:</span>{" "}
-                {invoice.projectId?.type || "N/A"}
-              </div>
-              <div>
-                <span className="font-medium">Description:</span>{" "}
-                {invoice.projectId?.description || "N/A"}
-              </div>
-            </div>
+            <h3 className="text-sm font-medium text-gray-700">Project</h3>
+            <p className="text-gray-900">{project?.name || "No Project"}</p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-700">Due Date</h3>
+            <p className="text-gray-900">
+              {new Date(invoice.dueDate).toLocaleDateString()}
+            </p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-700">Status</h3>
+            <p className="text-gray-900">{invoice.status}</p>
           </div>
           <div>
             <h3 className="text-sm font-medium text-gray-700">Items</h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Rate</TableHead>
-                  <TableHead>Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {invoice.items.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.description}</TableCell>
-                    <TableCell>{item.quantity}</TableCell>
-                    <TableCell>${item.rate.toLocaleString()}</TableCell>
-                    <TableCell>${item.amount.toLocaleString()}</TableCell>
-                  </TableRow>
+            <table className="w-full text-sm text-gray-900">
+              <thead>
+                <tr>
+                  <th className="text-left">Description</th>
+                  <th className="text-right">Quantity</th>
+                  <th className="text-right">Rate</th>
+                  <th className="text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoice.items.map((item: InvoiceItem, index: number) => (
+                  <tr key={index}>
+                    <td>{item.description}</td>
+                    <td className="text-right">{item.quantity}</td>
+                    <td className="text-right">
+                      ${item.rate.toLocaleString()}
+                    </td>
+                    <td className="text-right">
+                      ${item.amount.toLocaleString()}
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-700">Total Amount</h3>
+            <p className="text-gray-900">${invoice.amount.toLocaleString()}</p>
           </div>
           <div className="flex justify-end">
             <Button
-              className="border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 px-4 py-2 rounded-md cursor-pointer"
+              className="bg-black/90 text-white hover:bg-black/80 px-4 py-2 rounded-md cursor-pointer"
               onClick={onClose}
             >
               Close
