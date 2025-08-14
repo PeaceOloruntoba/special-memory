@@ -17,9 +17,8 @@ import {
   CardTitle,
 } from "../../components/ui/Card";
 import Badge from "../../components/ui/Badge";
-import { useAuthStore } from "../../store/useAuthStore"; // Import useAuthStore
+import { useAuthStore } from "../../store/useAuthStore";
 
-// Reverted to react-icons/bi imports as requested
 import {
   BiAward,
   BiDollar,
@@ -30,7 +29,6 @@ import {
   BiUser,
 } from "react-icons/bi";
 
-// Custom ProgressBar Component
 interface ProgressBarProps {
   value: number;
   className?: string;
@@ -50,7 +48,6 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ value, className = "" }) => {
   );
 };
 
-// Custom TabBar Component
 interface TabBarProps {
   defaultValue: string;
   tabs: { value: string; label: string }[];
@@ -94,39 +91,15 @@ const TabBar: React.FC<TabBarProps> = ({ defaultValue, tabs, children }) => {
 export default function AnalyticsPage() {
   const { analyticsData, isLoading, error, fetchAnalytics } =
     useAnalyticsStore();
-  console.log(analyticsData);
-  const { user } = useAuthStore(); // Get user from auth store to control data fetching
-  const [timePeriod, setTimePeriod] = useState("6months"); // Default to 6 months as per original UI
+  const { user } = useAuthStore();
+  const [timePeriod, setTimePeriod] = useState("6months");
 
-  // Frontend mock data for Efficiency Metrics (since backend doesn't provide them)
-  //   const efficiencyMetricsMock = {
-  //     timeEfficiencyByProjectType: [
-  //       { type: "Wedding Dress", avgHours: 45, efficiencyScore: 92 },
-  //       { type: "Business Suit", avgHours: 28, efficiencyScore: 88 },
-  //       { type: "Casual Dress", avgHours: 18, efficiencyScore: 95 },
-  //       { type: "Evening Gown", avgHours: 35, efficiencyScore: 85 },
-  //     ],
-  //     resourceUtilization: {
-  //       overall: 78,
-  //       peak: 95,
-  //       offPeak: 45,
-  //     },
-  //     qualityMetrics: {
-  //       avgClientRating: 4.8,
-  //       avgRevisions: 1.2,
-  //       firstFitSuccessRate: 96,
-  //     },
-  //   };
-
-  // Fetch data when component mounts or timePeriod/user changes
   useEffect(() => {
     if (user) {
-      // Only fetch if user is authenticated
       fetchAnalytics(timePeriod);
     }
   }, [timePeriod, fetchAnalytics, user]);
 
-  // Helper functions for formatting and displaying changes
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -145,7 +118,7 @@ export default function AnalyticsPage() {
   const getTrendingIcon = (change: number) => {
     if (change > 0) return <BiTrendingUp className="h-3 w-3 mr-1" />;
     if (change < 0) return <BiTrendingDown className="h-3 w-3 mr-1" />;
-    return null; // Or a neutral icon if change is 0
+    return null;
   };
 
   const getTrendingTextColor = (change: number) => {
@@ -179,7 +152,6 @@ export default function AnalyticsPage() {
     );
   }
 
-  // If no data is available after loading (e.g., empty state or initial fetch failed)
   if (!analyticsData) {
     return (
       <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 p-4 min-h-screen">
@@ -191,9 +163,13 @@ export default function AnalyticsPage() {
     );
   }
 
-  // Destructure analyticsData directly as it's guaranteed to be not null here
   const { keyMetrics, revenueAnalysis, clientInsights, projectPerformance } =
     analyticsData;
+
+  const revenueGoals = revenueAnalysis?.revenueGoals || {
+    monthly: {},
+    yearly: {},
+  };
 
   return (
     <div className="p-6 space-y-6 min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
@@ -317,7 +293,6 @@ export default function AnalyticsPage() {
           { value: "revenue", label: "Revenue Analysis" },
           { value: "clients", label: "Client Insights" },
           { value: "projects", label: "Project Performance" },
-          //   { value: "efficiency", label: "Efficiency Metrics" },
         ]}
       >
         {/* Revenue Analysis */}
@@ -364,10 +339,7 @@ export default function AnalyticsPage() {
                             </span>
                             <span className="text-xs text-black/70">
                               {data.projectsCount} project
-                              {data.projectsCount !== 1 ||
-                              data.projectsCount !== 0
-                                ? ""
-                                : "s"}
+                              {data.projectsCount !== 1 ? "s" : ""}
                             </span>
                           </div>
                         </div>
@@ -399,7 +371,7 @@ export default function AnalyticsPage() {
                             <span className="font-medium">{type.type}</span>
                             <Badge className="border border-gray-300 bg-white text-gray-700 px-2 py-1 rounded-full text-xs">
                               {type.count} project
-                              {type.count !== 1 || type.count !== 0 ? "" : "s"}
+                              {type.count !== 1 ? "s" : ""}
                             </Badge>
                           </div>
                           <span className="font-medium">
@@ -423,7 +395,7 @@ export default function AnalyticsPage() {
             <CardHeader>
               <CardTitle>Revenue Goals</CardTitle>
               <CardDescription>
-                Track progress towards targets (This data is mocked on frontend)
+                Track progress towards your monthly and yearly targets
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -432,24 +404,34 @@ export default function AnalyticsPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Monthly Goal</span>
                     <span className="text-sm text-gray-600">
-                      $8,400 / $10,000
+                      {formatCurrency(revenueGoals.monthly.achieved)} /{" "}
+                      {formatCurrency(revenueGoals.monthly.target)}
                     </span>
                   </div>
-                  <ProgressBar value={84} className="h-3" />
+                  <ProgressBar
+                    value={revenueGoals.monthly.percentage}
+                    className="h-3"
+                  />
                   <p className="text-xs text-gray-600">
-                    84% of monthly target achieved
+                    {revenueGoals.monthly.percentage.toFixed(1)}% of monthly
+                    target achieved
                   </p>
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Yearly Goal</span>
                     <span className="text-sm text-gray-600">
-                      $73,500 / $120,000
+                      {formatCurrency(revenueGoals.yearly.achieved)} /{" "}
+                      {formatCurrency(revenueGoals.yearly.target)}
                     </span>
                   </div>
-                  <ProgressBar value={61} className="h-3" />
+                  <ProgressBar
+                    value={revenueGoals.yearly.percentage}
+                    className="h-3"
+                  />
                   <p className="text-xs text-gray-600">
-                    61% of yearly target achieved
+                    {revenueGoals.yearly.percentage.toFixed(1)}% of yearly
+                    target achieved
                   </p>
                 </div>
               </div>
@@ -491,12 +473,10 @@ export default function AnalyticsPage() {
                     </div>
                     <div className="text-center p-3 bg-gray-50 rounded-lg">
                       <div className="text-lg font-bold">
-                        {/* Client retention is complex and will remain mocked for now or removed if not needed */}
-                        92%{" "}
-                        {/* Mocked on frontend, as complex backend tracking is needed */}
+                        {clientInsights.clientRetentionRate.toFixed(1)}%
                       </div>
                       <div className="text-xs text-gray-600">
-                        Client retention rate {/* Mocked on frontend */}
+                        Client retention rate
                       </div>
                     </div>
                   </div>
@@ -527,9 +507,7 @@ export default function AnalyticsPage() {
                             <div className="font-medium">{client.name}</div>
                             <div className="text-sm text-gray-600">
                               {client.projects} project
-                              {client.projects !== 1 || client.projects !== 0
-                                ? ""
-                                : "s"}
+                              {client.projects !== 1 ? "s" : ""}
                             </div>
                           </div>
                         </div>
@@ -569,7 +547,8 @@ export default function AnalyticsPage() {
                         <div className="flex justify-between items-center">
                           <span className="font-medium">{status.status}</span>
                           <span className="text-sm text-gray-600">
-                            {status.count} projects
+                            {status.count} project
+                            {status.count !== 1 ? "s" : ""}
                           </span>
                         </div>
                         <ProgressBar
@@ -633,133 +612,6 @@ export default function AnalyticsPage() {
             </Card>
           </div>
         </div>
-
-        {/* Efficiency Metrics */}
-        {/* <div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Time Efficiency</CardTitle>
-                <CardDescription>
-                  Average time spent per project type (Mock Data)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {efficiencyMetricsMock.timeEfficiencyByProjectType.map(
-                    (item) => (
-                      <div key={item.type} className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">
-                            {item.type}
-                          </span>
-                          <span className="text-sm text-gray-600">
-                            {item.avgHours}h avg
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <ProgressBar
-                            value={item.efficiencyScore}
-                            className="h-2 flex-1"
-                          />
-                          <span className="text-xs text-gray-600">
-                            {item.efficiencyScore}%
-                          </span>
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Resource Utilization</CardTitle>
-                <CardDescription>
-                  Studio and equipment usage (Mock Data)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-700">
-                      {efficiencyMetricsMock.resourceUtilization.overall}%
-                    </div>
-                    <div className="text-sm text-blue-600">
-                      Studio utilization
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Peak hours (2-6 PM)</span>
-                      <span>
-                        {efficiencyMetricsMock.resourceUtilization.peak}%
-                      </span>
-                    </div>
-                    <ProgressBar
-                      value={efficiencyMetricsMock.resourceUtilization.peak}
-                      className="h-2"
-                    />
-                    <div className="flex justify-between text-sm">
-                      <span>Off-peak hours</span>
-                      <span>
-                        {efficiencyMetricsMock.resourceUtilization.offPeak}%
-                      </span>
-                    </div>
-                    <ProgressBar
-                      value={efficiencyMetricsMock.resourceUtilization.offPeak}
-                      className="h-2"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Quality Metrics</CardTitle>
-                <CardDescription>
-                  Client satisfaction and revisions (Mock Data)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-700">
-                      {efficiencyMetricsMock.qualityMetrics.avgClientRating}
-                    </div>
-                    <div className="text-sm text-purple-600">
-                      Avg. client rating
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="text-lg font-bold">
-                        {efficiencyMetricsMock.qualityMetrics.avgRevisions}
-                      </div>
-                      <div className="text-xs text-gray-600">
-                        Avg. revisions
-                      </div>
-                    </div>
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="text-lg font-bold">
-                        {
-                          efficiencyMetricsMock.qualityMetrics
-                            .firstFitSuccessRate
-                        }
-                        %
-                      </div>
-                      <div className="text-xs text-gray-600">
-                        First-fit success
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div> */}
       </TabBar>
     </div>
   );

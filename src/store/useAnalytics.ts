@@ -1,20 +1,17 @@
-// store/useAnalyticsStore.ts
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import api from "../utils/api";
 import { toast } from "sonner";
 
-// --- Interfaces ---
-
 interface KeyMetrics {
   totalRevenue: number;
-  totalRevenueChange: number; // percentage change
-  activeClients: number; // Total active clients
-  activeClientsChange: number; // percentage change
+  totalRevenueChange: number;
+  activeClients: number;
+  activeClientsChange: number;
   projectsCompleted: number;
-  projectsCompletedChange: number; // percentage change
+  projectsCompletedChange: number;
   avgProjectValue: number;
-  avgProjectValueChange: number; // percentage change
+  avgProjectValueChange: number;
 }
 
 interface MonthlyTrendData {
@@ -37,7 +34,7 @@ interface ProjectStatusData {
 }
 
 interface ProjectTimelinePerformance {
-  onTimeDeliveryRate: number; // percentage
+  onTimeDeliveryRate: number;
   avgDaysToComplete: number;
   projectsDelayed: number;
 }
@@ -45,43 +42,45 @@ interface ProjectTimelinePerformance {
 interface TopClientData {
   id: string;
   name: string;
-  projects: number; // Number of projects for this client
-  value: number; // Total revenue from this client
+  projects: number;
+  value: number;
 }
 
 interface ClientInsights {
-  // New structure for client insights
+  clientRetentionRate: any;
+
   newClientsThisPeriod: number;
   avgProjectsPerClient: number;
   topClients: TopClientData[];
 }
 
-// AnalyticsData structure to match the backend response
 interface AnalyticsData {
   keyMetrics: KeyMetrics;
   revenueAnalysis: {
+    revenueGoals: {
+      monthly: { achieved: any; target: any; percentage: any };
+      yearly: { achieved: any; target: any; percentage: any };
+    };
     monthlyTrend: MonthlyTrendData[];
     byServiceType: ServiceTypeData[];
   };
-  clientInsights: ClientInsights; // Updated to use the new interface
+  clientInsights: ClientInsights;
   projectPerformance: {
     statusDistribution: ProjectStatusData[];
     timelinePerformance: ProjectTimelinePerformance;
   };
-  // efficiencyMetrics removed
 }
 
 interface AnalyticsState {
   analyticsData: AnalyticsData | null;
   isLoading: boolean;
   error: string | null;
-  lastFetched: { [key: string]: number | null }; // Stores timestamp per timePeriod
+  lastFetched: { [key: string]: number | null };
 
   fetchAnalytics: (timePeriod: string) => Promise<void>;
   clearAnalyticsData: () => void;
 }
 
-// --- Analytics Store ---
 export const useAnalyticsStore = create<AnalyticsState>()(
   persist(
     (set, _get) => ({
@@ -138,15 +137,13 @@ export const useAnalyticsStore = create<AnalyticsState>()(
       },
     }),
     {
-      name: "analytics-storage", // Name for localStorage
+      name: "analytics-storage",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         analyticsData: state.analyticsData,
         lastFetched: state.lastFetched,
       }),
       version: 1,
-      // Optional: onRehydrateStorage can be used to refetch data if it's too old
-      // This could involve iterating through lastFetched and refetching stale periods
     }
   )
 );
