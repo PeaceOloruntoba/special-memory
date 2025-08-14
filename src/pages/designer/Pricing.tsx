@@ -1,3 +1,4 @@
+// src/pages/designer/Pricing.tsx
 import { BiCheck, BiX, BiStar, BiCrown, BiBoltCircle } from "react-icons/bi";
 import {
   Card,
@@ -9,6 +10,10 @@ import {
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import React from "react";
+import usePricingStore from "../../store/usePricingStore";
+import { useNavigate } from "react-router";
+import { toast } from "sonner";
+import { BiLoaderAlt } from "react-icons/bi";
 
 interface Feature {
   name: string;
@@ -183,6 +188,31 @@ const faqs: FAQ[] = [
 ];
 
 export default function PricingPage() {
+  const { currentPlan, subscriptionStatus, isLoading, cancelSubscription } =
+    usePricingStore();
+  const navigate = useNavigate();
+
+  const handleCtaClick = (planName: string) => {
+    if (planName === "Free") {
+      toast.info("You're already on the Free plan.");
+      return;
+    }
+    if (planName === "Enterprise") {
+      // In a real app, this would redirect to a contact form or sales page
+      toast.info("Contacting sales for Enterprise plan...");
+      return;
+    }
+    if (currentPlan === planName) {
+      toast.info("You are already subscribed to this plan.");
+      return;
+    }
+    navigate(`/pricing/subscribe?plan=${planName.toLowerCase()}`);
+  };
+
+  const handleCancelSubscription = async () => {
+    await cancelSubscription();
+  };
+
   return (
     <div className="p-6 space-y-8 min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
       <div className="text-center space-y-4">
@@ -190,18 +220,33 @@ export default function PricingPage() {
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">
           Start free and upgrade as your fashion design business grows
         </p>
+        {isLoading && (
+          <div className="flex items-center justify-center text-purple-600">
+            <BiLoaderAlt className="animate-spin mr-2" />
+            <span>Checking subscription status...</span>
+          </div>
+        )}
+        {currentPlan && (
+          <p className="text-lg font-semibold text-purple-700">
+            Current Plan: <span className="capitalize">{currentPlan}</span>{" "}
+            (Status: <span className="capitalize">{subscriptionStatus}</span>)
+          </p>
+        )}
       </div>
 
       {/* Plan Comparison */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {plans.map((plan) => {
           const Icon = plan.icon;
+          const isCurrentPlan = currentPlan === plan.name;
+          const isEnterprisePlan = plan.name === "Enterprise";
+
           return (
             <Card
               key={plan.name}
               className={`relative ${plan.borderColor} ${
                 plan.popular ? "ring-2 ring-purple-500" : ""
-              }`}
+              } ${isCurrentPlan ? "ring-4 ring-green-500" : ""}`}
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
@@ -232,17 +277,42 @@ export default function PricingPage() {
               </CardHeader>
 
               <CardContent className="space-y-6 p-6">
-                <Button
-                  className={`w-full py-1 rounded-md ${
-                    plan.popular
-                      ? "bg-purple-600 hover:bg-purple-700"
-                      : plan.name === "Enterprise"
-                      ? "bg-yellow-600 hover:bg-yellow-700"
-                      : "bg-gray-600 hover:bg-gray-700"
-                  } text-white`}
-                >
-                  {plan.cta}
-                </Button>
+                {isCurrentPlan ? (
+                  plan.name !== "Free" ? (
+                    <Button
+                      onClick={handleCancelSubscription}
+                      className={`w-full py-1 rounded-md bg-red-500 hover:bg-red-600 text-white`}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <BiLoaderAlt className="animate-spin" />
+                      ) : (
+                        "Cancel Subscription"
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      className={`w-full py-1 rounded-md bg-gray-600 text-white cursor-not-allowed`}
+                      disabled
+                    >
+                      Current Plan
+                    </Button>
+                  )
+                ) : isEnterprisePlan ? (
+                  <Button
+                    onClick={() => handleCtaClick(plan.name)}
+                    className={`w-full py-1 rounded-md bg-yellow-600 hover:bg-yellow-700 text-white`}
+                  >
+                    Contact Sales
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => handleCtaClick(plan.name)}
+                    className={`w-full py-1 rounded-md bg-purple-600 hover:bg-purple-700 text-white`}
+                  >
+                    {plan.cta}
+                  </Button>
+                )}
 
                 <div className="space-y-3">
                   <h4 className="font-semibold text-gray-900">
@@ -547,14 +617,10 @@ export default function PricingPage() {
           Join thousands of fashion designers who trust Kunibi
         </p>
         <div className="flex justify-center gap-4">
-          <Button
-            className="py-2 px-3 rounded-lg bg-white text-purple-600 hover:bg-gray-100"
-          >
+          <Button className="py-2 px-3 rounded-lg bg-white text-purple-600 hover:bg-gray-100">
             Start Free Trial
           </Button>
-          <Button
-            className="border border-gray-300 py-2 px-3 rounded-lg text-white border-white hover:bg-white hover:text-purple-600 bg-transparent"
-          >
+          <Button className="border border-gray-300 py-2 px-3 rounded-lg text-white border-white hover:bg-white hover:text-purple-600 bg-transparent">
             Schedule Demo
           </Button>
         </div>

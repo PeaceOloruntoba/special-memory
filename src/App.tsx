@@ -20,6 +20,7 @@ import Calendar from "./pages/designer/Calendar";
 import Analytics from "./pages/designer/Analytics";
 import Pricing from "./pages/designer/Pricing";
 import Settings from "./pages/designer/Settings";
+import SubscribePage from "./pages/designer/Subscribe";
 
 export default function App() {
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
@@ -116,6 +117,14 @@ export default function App() {
             element={
               <AdminGuard>
                 <Pricing />
+              </AdminGuard>
+            }
+          />
+          <Route
+            path="/pricing/subscribe"
+            element={
+              <AdminGuard>
+                <SubscribePage />
               </AdminGuard>
             }
           />
