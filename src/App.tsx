@@ -19,6 +19,7 @@ import Invoices from "./pages/designer/Invoice";
 import Calendar from "./pages/designer/Calendar";
 import Analytics from "./pages/designer/Analytics";
 import Pricing from "./pages/designer/Pricing";
+import Settings from "./pages/designer/Settings";
 
 export default function App() {
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
@@ -122,7 +123,7 @@ export default function App() {
             path="/settings"
             element={
               <AdminGuard>
-                <Default pageTitle="Settings" />
+                <Settings/>
               </AdminGuard>
             }
           />
