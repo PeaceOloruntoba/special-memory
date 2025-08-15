@@ -22,6 +22,7 @@ import Pricing from "./pages/designer/Pricing";
 import Settings from "./pages/designer/Settings";
 import SubscribePage from "./pages/designer/Subscribe";
 import PatternDesignerPage from "./pages/designer/Patterns";
+import AIPatternPage from "./pages/designer/AIPatterns";
 
 export default function App() {
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
@@ -77,7 +78,7 @@ export default function App() {
             path="/ai-patterns"
             element={
               <AdminGuard>
-                <Default pageTitle="AI Patterns" />
+                <AIPatternPage />
               </AdminGuard>
             }
           />
@@ -133,7 +134,7 @@ export default function App() {
             path="/settings"
             element={
               <AdminGuard>
-                <Settings/>
+                <Settings />
               </AdminGuard>
             }
           />
