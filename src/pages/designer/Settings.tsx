@@ -220,10 +220,10 @@ export default function SettingsPage() {
 
   // Fetch user data from the store on component mount
   useEffect(() => {
-    if (!user) {
+    // if (!user) {
       fetchSettings();
-    }
-  }, [user, fetchSettings]);
+    // }
+  }, []);
 
   // Update local state when the store's user object changes
   useEffect(() => {
@@ -231,7 +231,7 @@ export default function SettingsPage() {
       setProfile({
         name: `${user.firstName} ${user.lastName}`,
         email: user.email,
-        phone: "", // Assuming this field is not in the current user data but you want to display it
+        phone: user.phone || "", // Assuming this field is not in the current user data but you want to display it
         address: user.address || "",
         bio: user.bio || "",
         website: user.website || "",
@@ -268,6 +268,7 @@ export default function SettingsPage() {
       address: profile.address,
       bio: profile.bio,
       website: profile.website,
+      phone: profile.phone,
     });
   };
 
@@ -622,9 +623,9 @@ export default function SettingsPage() {
               <Button
                 onClick={handleSaveNotifications}
                 disabled={isUpdating}
-                className="bg-purple-600 text-white hover:bg-purple-700"
+                className="bg-purple-600 text-white hover:bg-purple-700 py-2 px-6 rounded-md"
               >
-                {isUpdating ? "Saving..." : "Save Notification Settings"}
+                {isUpdating ? <Spinner /> : "Save Notification Settings"}
               </Button>
             </CardContent>
           </Card>

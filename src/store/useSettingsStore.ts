@@ -17,6 +17,7 @@ interface UserData {
   address?: string;
   bio?: string;
   website?: string;
+  phone?: string;
   businessName?: string;
   businessType?: string[];
   roles?: string[];
@@ -116,7 +117,6 @@ export const useSettingsStore = create<UserSettingsState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await api.get("/api/v1/user");
-          console.log(response);
           const userData: UserData = response.data.data.user; // Adjust path based on your actual API response structure (e.g., response.data.user)
           set({
             user: userData,
