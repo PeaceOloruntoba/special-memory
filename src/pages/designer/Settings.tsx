@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, {
+  useState,
+  useEffect,
+} from "react";
 import {
   FaUser,
   FaBell,
@@ -32,7 +35,7 @@ import {
 import Textarea from "../../components/ui/Textarea";
 
 // Import your Zustand store
-import { useSettingsStore } from "../../store/useSettingsStore"; // Adjust path as needed
+import { useSettingsStore } from "../../store/useSettingsStore";
 
 // --- Custom Switch Component (as it's only used here) ---
 interface SwitchProps {
@@ -67,28 +70,37 @@ const Switch: React.FC<SwitchProps> = ({ checked, onCheckedChange, id }) => {
   );
 };
 
-// --- Custom Tabs Components (as they're only used here) ---
+// --- Corrected Tabs Components ---
 interface TabsProps {
   defaultValue: string;
-  children: React.ReactNode[];
+  children: React.ReactNode;
 }
 
 const Tabs: React.FC<TabsProps> = ({ defaultValue, children }) => {
   const [activeTab, setActiveTab] = useState(defaultValue);
+
+  // Type guard for TabsList
+  const isTabsList = (
+    child: React.ReactNode
+  ): child is React.ReactElement<TabsListProps> =>
+    React.isValidElement(child) && child.type === TabsList;
+
+  // Type guard for TabsTrigger
+  const isTabsTrigger = (
+    child: React.ReactNode
+  ): child is React.ReactElement<TabsTriggerProps> =>
+    React.isValidElement(child) && child.type === TabsTrigger;
+
   return (
     <div>
       {React.Children.map(children, (child) => {
-        if (React.isValidElement(child) && child.type === TabsList) {
+        if (isTabsList(child)) {
           return React.cloneElement(child, {
             children: React.Children.map(child.props.children, (trigger) => {
-              if (
-                React.isValidElement(trigger) &&
-                trigger.type === TabsTrigger
-              ) {
-                const value = trigger.props.value;
+              if (isTabsTrigger(trigger)) {
                 return React.cloneElement(trigger, {
-                  onClick: () => setActiveTab(value),
-                  active: activeTab === value,
+                  onClick: () => setActiveTab(trigger.props.value),
+                  active: activeTab === trigger.props.value,
                 });
               }
               return trigger;
@@ -100,8 +112,7 @@ const Tabs: React.FC<TabsProps> = ({ defaultValue, children }) => {
       {React.Children.map(children, (child) => {
         if (
           React.isValidElement(child) &&
-          child.type === TabsContent &&
-          child.props.value === activeTab
+          (child.props as { value?: string }).value === activeTab
         ) {
           return child;
         }
@@ -129,8 +140,8 @@ const TabsList: React.FC<TabsListProps> = ({ children, className = "" }) => {
 interface TabsTriggerProps {
   children: React.ReactNode;
   value: string;
-  onClick?: () => void; // Made optional as it's added by parent Tabs component
-  active?: boolean; // Made optional as it's added by parent Tabs component
+  onClick?: () => void;
+  active?: boolean;
 }
 
 const TabsTrigger: React.FC<TabsTriggerProps> = ({
