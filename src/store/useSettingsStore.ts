@@ -63,7 +63,7 @@ export const useSettingsStore = create<SettingsStore>()(
       fetchSettings: async () => {
         set({ isLoading: true, error: null });
         try {
-          const response = await api.get(`${API_USER_URL}`);
+          const response = await api.get(`${API_USER_URL}/profile`);
           const userData: User = response.data.data.user;
           set({ user: userData, isLoading: false, lastFetched: Date.now() });
           toast.success("Settings loaded successfully!");
