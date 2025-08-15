@@ -1,7 +1,9 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import api from "../utils/api";
 import { toast } from "sonner";
+import api from "../utils/api"; // Your custom API instance
+
+// --- Interfaces for User Data and Settings ---
 
 interface UserSettings {
   emailNotifications: boolean;
@@ -30,14 +32,33 @@ interface User {
   settings: UserSettings;
   plan: string;
   isSubActive: boolean;
+  lastLogin?: string;
+  activeSessions?: Array<{
+    device: string;
+    location: string;
+    lastActive: string;
+    current: boolean;
+  }>;
+  is2FAEnabled: boolean;
+}
+
+interface SubscriptionDetails {
+  planId: string;
+  status: string;
+  startDate: string | null;
+  dueDate: string | null;
+  paymentMethod: { brand: string; last4: string; exp: string } | null;
+  invoices: Array<{ date: string; amount: string; status: string }>;
 }
 
 interface SettingsStore {
   user: User | null;
+  subscriptionDetails: SubscriptionDetails | null;
   isLoading: boolean;
   isUpdating: boolean;
   error: string | null;
-  lastFetched: number | null;
+  lastFetched: number | null; // Added to help with re-fetching logic
+
   fetchSettings: () => Promise<void>;
   updateProfile: (profileData: Partial<User>) => Promise<void>;
   updateNotifications: (notifications: Partial<UserSettings>) => Promise<void>;
@@ -47,14 +68,23 @@ interface SettingsStore {
     newPassword: string
   ) => Promise<void>;
   updateProfileImage: (file: File) => Promise<void>;
+  fetchSubscriptionDetails: () => Promise<void>;
+  subscribePlan: (planId: string, paymentMethodId?: string) => Promise<void>;
+  cancelSubscription: () => Promise<void>;
+  updatePaymentMethod: (paymentMethodId: string) => Promise<void>;
+  deleteAccount: () => Promise<void>;
+  toggle2FA: (enable: boolean) => Promise<void>;
+  logoutAll: () => Promise<void>;
 }
 
 const API_USER_URL = "/api/v1/user";
+const SUB_API_URL = "/api/v1/subscriptions";
 
 export const useSettingsStore = create<SettingsStore>()(
   persist(
-    (set, _get) => ({
+    (set, get) => ({
       user: null,
+      subscriptionDetails: null,
       isLoading: false,
       isUpdating: false,
       error: null,
@@ -64,9 +94,11 @@ export const useSettingsStore = create<SettingsStore>()(
         set({ isLoading: true, error: null });
         try {
           const response = await api.get(`${API_USER_URL}/profile`);
-          const userData: User = response.data.data.user;
-          set({ user: userData, isLoading: false, lastFetched: Date.now() });
-          toast.success("Settings loaded successfully!");
+          set({
+            user: response.data.data.user,
+            isLoading: false,
+            lastFetched: Date.now(),
+          });
         } catch (error: any) {
           const errMsg =
             error.response?.data?.message || "Failed to fetch settings";
@@ -82,9 +114,8 @@ export const useSettingsStore = create<SettingsStore>()(
             `${API_USER_URL}/profile`,
             profileData
           );
-          const updatedUser: User = response.data.data.user;
-          set({ user: updatedUser, isUpdating: false });
-          toast.success("Profile updated successfully!");
+          set({ user: response.data.data.user, isUpdating: false });
+          toast.success("Profile updated successfully");
         } catch (error: any) {
           const errMsg =
             error.response?.data?.message || "Failed to update profile";
@@ -100,8 +131,7 @@ export const useSettingsStore = create<SettingsStore>()(
           const response = await api.patch(`${API_USER_URL}/notifications`, {
             settings: notifications,
           });
-          const updatedUser: User = response.data.data.user;
-          set({ user: updatedUser, isUpdating: false });
+          set({ user: response.data.data.user, isUpdating: false });
           toast.success("Notifications updated successfully");
         } catch (error: any) {
           const errMsg =
@@ -118,8 +148,7 @@ export const useSettingsStore = create<SettingsStore>()(
           const response = await api.patch(`${API_USER_URL}/preferences`, {
             settings: preferences,
           });
-          const updatedUser: User = response.data.data.user;
-          set({ user: updatedUser, isUpdating: false });
+          set({ user: response.data.data.user, isUpdating: false });
           toast.success("Preferences updated successfully");
         } catch (error: any) {
           const errMsg =
@@ -156,8 +185,7 @@ export const useSettingsStore = create<SettingsStore>()(
           const response = await api.patch(`${API_USER_URL}/image`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
-          const updatedUser: User = response.data.data.user;
-          set({ user: updatedUser, isUpdating: false });
+          set({ user: response.data.data.user, isUpdating: false });
           toast.success("Profile image updated successfully");
         } catch (error: any) {
           const errMsg =
@@ -167,15 +195,132 @@ export const useSettingsStore = create<SettingsStore>()(
           throw error;
         }
       },
+
+      fetchSubscriptionDetails: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await api.get(`${SUB_API_URL}/details`);
+          set({ subscriptionDetails: response.data.data, isLoading: false });
+        } catch (error: any) {
+          const errMsg =
+            error.response?.data?.message ||
+            "Failed to fetch subscription details";
+          set({ error: errMsg, isLoading: false });
+          toast.error(errMsg);
+        }
+      },
+
+      subscribePlan: async (planId, paymentMethodId) => {
+        set({ isUpdating: true, error: null });
+        try {
+          await api.post(`${SUB_API_URL}/`, { planId, paymentMethodId });
+          set({ isUpdating: false });
+          toast.success("Plan updated successfully");
+          get().fetchSubscriptionDetails();
+        } catch (error: any) {
+          const errMsg =
+            error.response?.data?.message || "Failed to subscribe to plan";
+          set({ error: errMsg, isUpdating: false });
+          toast.error(errMsg);
+          throw error;
+        }
+      },
+
+      cancelSubscription: async () => {
+        set({ isUpdating: true, error: null });
+        try {
+          await api.post(`${SUB_API_URL}/cancel`);
+          set({ isUpdating: false });
+          toast.success("Subscription cancelled successfully");
+          get().fetchSubscriptionDetails();
+        } catch (error: any) {
+          const errMsg =
+            error.response?.data?.message || "Failed to cancel subscription";
+          set({ error: errMsg, isUpdating: false });
+          toast.error(errMsg);
+          throw error;
+        }
+      },
+
+      updatePaymentMethod: async (paymentMethodId) => {
+        set({ isUpdating: true, error: null });
+        try {
+          await api.patch(`${SUB_API_URL}/payment-method`, { paymentMethodId });
+          set({ isUpdating: false });
+          toast.success("Payment method updated successfully");
+          get().fetchSubscriptionDetails();
+        } catch (error: any) {
+          const errMsg =
+            error.response?.data?.message || "Failed to update payment method";
+          set({ error: errMsg, isUpdating: false });
+          toast.error(errMsg);
+          throw error;
+        }
+      },
+
+      deleteAccount: async () => {
+        set({ isUpdating: true, error: null });
+        try {
+          await api.post(`${API_USER_URL}/delete-account`);
+          set({ isUpdating: false });
+          toast.success("Account deleted successfully");
+          // Clear the store and potentially redirect
+          set({ user: null, subscriptionDetails: null });
+        } catch (error: any) {
+          const errMsg =
+            error.response?.data?.message || "Failed to delete account";
+          set({ error: errMsg, isUpdating: false });
+          toast.error(errMsg);
+          throw error;
+        }
+      },
+
+      toggle2FA: async (enable) => {
+        set({ isUpdating: true, error: null });
+        try {
+          const response = await api.patch(`${API_USER_URL}/2fa`, { enable });
+          response
+          set({
+            user: { ...get().user!, is2FAEnabled: enable },
+            isUpdating: false,
+          });
+          toast.success(`2FA ${enable ? "enabled" : "disabled"} successfully`);
+        } catch (error: any) {
+          const errMsg =
+            error.response?.data?.message || "Failed to toggle 2FA";
+          set({ error: errMsg, isUpdating: false });
+          toast.error(errMsg);
+          throw error;
+        }
+      },
+
+      logoutAll: async () => {
+        set({ isUpdating: true, error: null });
+        try {
+          await api.post(`${API_USER_URL}/logout-all`);
+          set({
+            user: { ...get().user!, activeSessions: [] },
+            isUpdating: false,
+          });
+          toast.success("Logged out from all sessions");
+        } catch (error: any) {
+          const errMsg =
+            error.response?.data?.message || "Failed to logout all sessions";
+          set({ error: errMsg, isUpdating: false });
+          toast.error(errMsg);
+          throw error;
+        }
+      },
     }),
     {
-      name: "user-settings-storage",
+      name: "settings-store-v2",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         user: state.user,
+        subscriptionDetails: state.subscriptionDetails,
         lastFetched: state.lastFetched,
       }),
-      version: 1,
+      version: 2, // Incrementing version due to new state and API changes
     }
   )
 );
