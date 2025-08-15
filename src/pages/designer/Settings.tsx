@@ -749,13 +749,13 @@ export default function SettingsPage() {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1 flex flex-col">
                   <Label htmlFor="default-duration">
                     Default Project Duration (days)
                   </Label>
                   <Input
                     id="default-duration"
-                    type="number"
+                    type="number" className="p-1 px-2 border border-gray-300 rounded-md text-black/80"
                     value={preferences.defaultProjectDuration}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setPreferences({
@@ -770,9 +770,9 @@ export default function SettingsPage() {
               <Button
                 onClick={handleSavePreferences}
                 disabled={isUpdating}
-                className="bg-purple-600 text-white hover:bg-purple-700"
+                className="bg-purple-600 text-white hover:bg-purple-700 py-2 px-6 rounded-md"
               >
-                {isUpdating ? "Saving..." : "Save Preferences"}
+                {isUpdating ? <Spinner /> : "Save Preferences"}
               </Button>
             </CardContent>
           </Card>
