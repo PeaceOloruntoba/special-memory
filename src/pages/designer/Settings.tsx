@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaUser,
   FaBell,
@@ -8,58 +8,40 @@ import {
   FaShieldAlt,
   FaDownload,
 } from "react-icons/fa";
-import { toast } from "sonner";
-import { useSettingsStore } from "../../store/useSettingsStore";
+import { toast } from "sonner"; // Assuming sonner is installed for toasts
 
-// --- Custom Components with Correct Styling ---
+// Import your provided components
+import Button from "../../components/ui/Button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/Card";
+import Badge from "../../components/ui/Badge";
+import Input from "../../components/ui/Input";
+import Label from "../../components/ui/Label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/Select";
+import Textarea from "../../components/ui/Textarea";
 
-// Button component with explicit variants
-const Button = ({
-  children,
-  onClick,
-  disabled,
-  variant = "primary",
-  className = "",
-  ...props
-}) => {
-  let styles = "py-2 px-4 rounded-md font-semibold transition-colors";
-  if (variant === "primary") {
-    styles += " bg-purple-600 text-white hover:bg-purple-700";
-  } else if (variant === "outline") {
-    styles += " border border-gray-300 text-gray-700 hover:bg-gray-100";
-  } else if (variant === "destructive") {
-    styles += " bg-red-600 text-white hover:bg-red-700";
-  }
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`${styles} ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-};
+// Import your Zustand store
+import { useSettingsStore } from "../../store/useSettingsStore"; // Adjust path as needed
 
-// Badge component with explicit variants
-const Badge = ({ children, variant = "default", className = "", ...props }) => {
-  let styles =
-    "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium";
-  if (variant === "default") {
-    styles += " bg-gray-100 text-gray-800";
-  } else if (variant === "outline") {
-    styles += " border border-current text-current";
-  }
-  return (
-    <span className={`${styles} ${className}`} {...props}>
-      {children}
-    </span>
-  );
-};
+// --- Custom Switch Component (as it's only used here) ---
+interface SwitchProps {
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+  id: string;
+}
 
-// Custom Switch Component
-const Switch = ({ checked, onCheckedChange, id }) => {
+const Switch: React.FC<SwitchProps> = ({ checked, onCheckedChange, id }) => {
   return (
     <label htmlFor={id} className="flex items-center cursor-pointer">
       <div className="relative">
@@ -85,35 +67,42 @@ const Switch = ({ checked, onCheckedChange, id }) => {
   );
 };
 
-// Custom Tabs Components (as provided, no changes needed)
-const Tabs = ({ defaultValue, children }) => {
+// --- Custom Tabs Components (as they're only used here) ---
+interface TabsProps {
+  defaultValue: string;
+  children: React.ReactNode[];
+}
+
+const Tabs: React.FC<TabsProps> = ({ defaultValue, children }) => {
   const [activeTab, setActiveTab] = useState(defaultValue);
   return (
     <div>
-      {children.map((child) => {
-        if (child.type === TabsList) {
-          return (
-            <TabsList key="tab-list">
-              {child.props.children.map((trigger) => {
+      {React.Children.map(children, (child) => {
+        if (React.isValidElement(child) && child.type === TabsList) {
+          return React.cloneElement(child, {
+            children: React.Children.map(child.props.children, (trigger) => {
+              if (
+                React.isValidElement(trigger) &&
+                trigger.type === TabsTrigger
+              ) {
                 const value = trigger.props.value;
-                return (
-                  <TabsTrigger
-                    key={value}
-                    value={value}
-                    onClick={() => setActiveTab(value)}
-                    active={activeTab === value}
-                  >
-                    {trigger.props.children}
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
-          );
+                return React.cloneElement(trigger, {
+                  onClick: () => setActiveTab(value),
+                  active: activeTab === value,
+                });
+              }
+              return trigger;
+            }),
+          });
         }
         return null;
       })}
-      {children.map((child) => {
-        if (child.type === TabsContent && child.props.value === activeTab) {
+      {React.Children.map(children, (child) => {
+        if (
+          React.isValidElement(child) &&
+          child.type === TabsContent &&
+          child.props.value === activeTab
+        ) {
           return child;
         }
         return null;
@@ -122,7 +111,12 @@ const Tabs = ({ defaultValue, children }) => {
   );
 };
 
-const TabsList = ({ children, className }) => {
+interface TabsListProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+const TabsList: React.FC<TabsListProps> = ({ children, className = "" }) => {
   return (
     <div
       className={`flex items-center justify-center p-1 bg-gray-100 rounded-md ${className}`}
@@ -132,7 +126,18 @@ const TabsList = ({ children, className }) => {
   );
 };
 
-const TabsTrigger = ({ children, value, onClick, active }) => {
+interface TabsTriggerProps {
+  children: React.ReactNode;
+  value: string;
+  onClick?: () => void; // Made optional as it's added by parent Tabs component
+  active?: boolean; // Made optional as it's added by parent Tabs component
+}
+
+const TabsTrigger: React.FC<TabsTriggerProps> = ({
+  children,
+  onClick,
+  active,
+}) => {
   return (
     <button
       onClick={onClick}
@@ -145,87 +150,20 @@ const TabsTrigger = ({ children, value, onClick, active }) => {
   );
 };
 
-const TabsContent = ({ children, value, className }) => {
+interface TabsContentProps {
+  children: React.ReactNode;
+  value: string;
+  className?: string;
+}
+
+const TabsContent: React.FC<TabsContentProps> = ({
+  children,
+  className = "",
+}) => {
   return <div className={className}>{children}</div>;
 };
 
-// UI Components (assuming these are from your component library, e.g., Shadcn/UI)
-// No changes here, assuming they are imported correctly.
-const Card = ({ children }) => (
-  <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-    {children}
-  </div>
-);
-const CardContent = ({ children, className = "" }) => (
-  <div className={`p-6 pt-0 ${className}`}>{children}</div>
-);
-const CardDescription = ({ children }) => (
-  <p className="text-sm text-muted-foreground">{children}</p>
-);
-const CardHeader = ({ children }) => (
-  <div className="flex flex-col space-y-1.5 p-6">{children}</div>
-);
-const CardTitle = ({ children, className = "" }) => (
-  <h3
-    className={`text-2xl font-semibold leading-none tracking-tight ${className}`}
-  >
-    {children}
-  </h3>
-);
-const Input = ({ ...props }) => (
-  <input
-    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-    {...props}
-  />
-);
-const Label = ({ children, ...props }) => (
-  <label
-    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-    {...props}
-  >
-    {children}
-  </label>
-);
-const Select = ({ value, onValueChange, children }) => {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="relative">
-      <SelectTrigger onClick={() => setOpen(!open)}>
-        {children[0]}
-      </SelectTrigger>
-      {open && <SelectContent>{children[1]}</SelectContent>}
-    </div>
-  );
-};
-const SelectContent = ({ children }) => (
-  <div className="absolute z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
-    {children}
-  </div>
-);
-const SelectItem = ({ children, value, onClick }) => (
-  <div
-    onClick={onClick}
-    className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-  >
-    {children}
-  </div>
-);
-const SelectTrigger = ({ children, ...props }) => (
-  <div
-    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-    {...props}
-  >
-    {children}
-  </div>
-);
-const SelectValue = () => <span className="text-gray-900"></span>;
-const Textarea = ({ ...props }) => (
-  <textarea
-    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-    {...props}
-  ></textarea>
-);
-
+// --- Main SettingsPage Component ---
 export default function SettingsPage() {
   const {
     user,
@@ -235,6 +173,7 @@ export default function SettingsPage() {
     updateProfileImage,
     isLoading,
     isUpdating,
+    error,
   } = useSettingsStore();
 
   const [profile, setProfile] = useState({
@@ -283,7 +222,7 @@ export default function SettingsPage() {
       setProfile({
         name: `${user.firstName} ${user.lastName}`,
         email: user.email,
-        phone: "", // Assuming this field is not in the current user data
+        phone: "", // Assuming this field is not in the current user data but you want to display it
         address: user.address || "",
         bio: user.bio || "",
         website: user.website || "",
@@ -362,6 +301,21 @@ export default function SettingsPage() {
     );
   }
 
+  // Handle errors in a more visible way, or redirect if critical
+  if (error) {
+    return (
+      <div className="p-6 text-center text-red-600">
+        <p className="text-lg">Error: {error}</p>
+        <p className="text-sm">Please try again later or contact support.</p>
+      </div>
+    );
+  }
+
+  // If user data hasn't loaded yet (after initial loading phase), return null or a spinner
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -401,7 +355,7 @@ export default function SettingsPage() {
                   <Input
                     id="name"
                     value={profile.name}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setProfile({ ...profile, name: e.target.value })
                     }
                   />
@@ -412,7 +366,7 @@ export default function SettingsPage() {
                     id="email"
                     type="email"
                     value={profile.email}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setProfile({ ...profile, email: e.target.value })
                     }
                   />
@@ -422,7 +376,7 @@ export default function SettingsPage() {
                   <Input
                     id="phone"
                     value={profile.phone}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setProfile({ ...profile, phone: e.target.value })
                     }
                   />
@@ -432,7 +386,7 @@ export default function SettingsPage() {
                   <Input
                     id="website"
                     value={profile.website}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setProfile({ ...profile, website: e.target.value })
                     }
                   />
@@ -444,7 +398,7 @@ export default function SettingsPage() {
                 <Input
                   id="address"
                   value={profile.address}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setProfile({ ...profile, address: e.target.value })
                   }
                 />
@@ -455,14 +409,18 @@ export default function SettingsPage() {
                 <Textarea
                   id="bio"
                   value={profile.bio}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                     setProfile({ ...profile, bio: e.target.value })
                   }
                   rows={4}
                 />
               </div>
 
-              <Button onClick={handleSaveProfile} disabled={isUpdating}>
+              <Button
+                onClick={handleSaveProfile}
+                disabled={isUpdating}
+                className="bg-purple-600 text-white hover:bg-purple-700"
+              >
                 {isUpdating ? "Saving..." : "Save Profile Changes"}
               </Button>
             </CardContent>
@@ -500,7 +458,7 @@ export default function SettingsPage() {
                     onClick={() =>
                       document.getElementById("file-input")?.click()
                     }
-                    variant="outline"
+                    className="border border-gray-300 text-gray-700 hover:bg-gray-100" // Outline variant styling
                     disabled={isUpdating}
                   >
                     {isUpdating ? "Uploading..." : "Upload New Picture"}
@@ -646,7 +604,11 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <Button onClick={handleSaveNotifications} disabled={isUpdating}>
+              <Button
+                onClick={handleSaveNotifications}
+                disabled={isUpdating}
+                className="bg-purple-600 text-white hover:bg-purple-700"
+              >
                 {isUpdating ? "Saving..." : "Save Notification Settings"}
               </Button>
             </CardContent>
@@ -779,7 +741,7 @@ export default function SettingsPage() {
                     id="default-duration"
                     type="number"
                     value={preferences.defaultProjectDuration}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setPreferences({
                         ...preferences,
                         defaultProjectDuration: e.target.value,
@@ -789,7 +751,11 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <Button onClick={handleSavePreferences} disabled={isUpdating}>
+              <Button
+                onClick={handleSavePreferences}
+                disabled={isUpdating}
+                className="bg-purple-600 text-white hover:bg-purple-700"
+              >
                 {isUpdating ? "Saving..." : "Save Preferences"}
               </Button>
             </CardContent>
@@ -811,15 +777,15 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
                 <div>
                   <h3 className="font-semibold text-purple-900">
-                    {user?.plan} Plan
+                    {user?.plan === "premium" ? "Premium Plan" : "Free Plan"}
                   </h3>
                   <p className="text-sm text-purple-700">
-                    {user?.plan === "Premium"
+                    {user?.plan === "premium"
                       ? "Unlimited clients, projects, and AI generations"
-                      : "Free trial active until ..."}
+                      : "Limited features for free users."}
                   </p>
                   {user?.isSubActive && (
-                    <Badge className="bg-green-100 text-green-700">
+                    <Badge className="bg-green-100 text-green-700 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
                       Active
                     </Badge>
                   )}
@@ -842,7 +808,7 @@ export default function SettingsPage() {
                       <div className="text-sm text-gray-600">Expires 12/25</div>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm">
+                  <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100">
                     Update
                   </Button>
                 </div>
@@ -868,13 +834,10 @@ export default function SettingsPage() {
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="font-medium">{invoice.amount}</div>
-                        <Badge
-                          variant="outline"
-                          className="text-green-600 border-green-600"
-                        >
+                        <Badge className="text-green-600 border-green-600 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border border-current text-current">
                           {invoice.status}
                         </Badge>
-                        <Button variant="outline" size="sm">
+                        <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100">
                           <FaDownload className="h-4 w-4" />
                         </Button>
                       </div>
@@ -906,7 +869,7 @@ export default function SettingsPage() {
                       type="password"
                       placeholder="Current password"
                       value={passwordFields.currentPassword}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setPasswordFields({
                           ...passwordFields,
                           currentPassword: e.target.value,
@@ -917,7 +880,7 @@ export default function SettingsPage() {
                       type="password"
                       placeholder="New password"
                       value={passwordFields.newPassword}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setPasswordFields({
                           ...passwordFields,
                           newPassword: e.target.value,
@@ -928,7 +891,7 @@ export default function SettingsPage() {
                       type="password"
                       placeholder="Confirm new password"
                       value={passwordFields.confirmNewPassword}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setPasswordFields({
                           ...passwordFields,
                           confirmNewPassword: e.target.value,
@@ -938,6 +901,7 @@ export default function SettingsPage() {
                     <Button
                       onClick={handleUpdatePassword}
                       disabled={isUpdating}
+                      className="bg-purple-600 text-white hover:bg-purple-700"
                     >
                       {isUpdating ? "Updating..." : "Update Password"}
                     </Button>
@@ -954,7 +918,9 @@ export default function SettingsPage() {
                         Add an extra layer of security to your account
                       </p>
                     </div>
-                    <Button variant="outline">Enable 2FA</Button>
+                    <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100">
+                      Enable 2FA
+                    </Button>
                   </div>
                 </div>
 
@@ -968,10 +934,7 @@ export default function SettingsPage() {
                           Chrome on MacOS • New York, NY
                         </div>
                       </div>
-                      <Badge
-                        className="text-green-600 border-green-600"
-                        variant="outline"
-                      >
+                      <Badge className="text-green-600 border-green-600 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border border-current text-current">
                         Active
                       </Badge>
                     </div>
@@ -1001,7 +964,7 @@ export default function SettingsPage() {
                     Download a copy of all your data including clients,
                     projects, and patterns.
                   </p>
-                  <Button variant="outline">
+                  <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100">
                     <FaDownload className="h-4 w-4 mr-2" />
                     Export All Data
                   </Button>
@@ -1013,7 +976,9 @@ export default function SettingsPage() {
                     Your data is automatically backed up daily. Last backup:
                     Today at 3:00 AM
                   </p>
-                  <Button variant="outline">Create Manual Backup</Button>
+                  <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100">
+                    Create Manual Backup
+                  </Button>
                 </div>
 
                 <div className="border-t pt-4">
@@ -1026,13 +991,17 @@ export default function SettingsPage() {
                         Delete all data permanently. This action cannot be
                         undone.
                       </p>
-                      <Button variant="destructive">Delete All Data</Button>
+                      <Button className="bg-red-600 text-white hover:bg-red-700">
+                        Delete All Data
+                      </Button>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 mb-2">
                         Close your account and delete all associated data.
                       </p>
-                      <Button variant="destructive">Delete Account</Button>
+                      <Button className="bg-red-600 text-white hover:bg-red-700">
+                        Delete Account
+                      </Button>
                     </div>
                   </div>
                 </div>
