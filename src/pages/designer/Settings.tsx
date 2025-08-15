@@ -8,9 +8,7 @@ import {
   FaShieldAlt,
   FaDownload,
 } from "react-icons/fa";
-import { toast } from "sonner"; // Assuming sonner is installed for toasts
-
-// Import your provided components
+import { toast } from "sonner";
 import Button from "../../components/ui/Button";
 import {
   Card,
@@ -30,12 +28,9 @@ import {
   SelectValue,
 } from "../../components/ui/Select";
 import Textarea from "../../components/ui/Textarea";
-
-// Import your Zustand store
 import { useSettingsStore } from "../../store/useSettingsStore";
 import Spinner from "../../components/ui/Spinner";
 
-// --- Custom Switch Component (as it's only used here) ---
 interface SwitchProps {
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
@@ -68,7 +63,6 @@ const Switch: React.FC<SwitchProps> = ({ checked, onCheckedChange, id }) => {
   );
 };
 
-// --- Corrected Tabs Components ---
 interface TabsProps {
   defaultValue: string;
   children: React.ReactNode;
@@ -77,13 +71,11 @@ interface TabsProps {
 const Tabs: React.FC<TabsProps> = ({ defaultValue, children }) => {
   const [activeTab, setActiveTab] = useState(defaultValue);
 
-  // Type guard for TabsList
   const isTabsList = (
     child: React.ReactNode
   ): child is React.ReactElement<TabsListProps> =>
     React.isValidElement(child) && child.type === TabsList;
 
-  // Type guard for TabsTrigger
   const isTabsTrigger = (
     child: React.ReactNode
   ): child is React.ReactElement<TabsTriggerProps> =>
@@ -99,11 +91,11 @@ const Tabs: React.FC<TabsProps> = ({ defaultValue, children }) => {
                 return React.cloneElement(trigger, {
                   onClick: () => setActiveTab(trigger.props.value),
                   active: activeTab === trigger.props.value,
-                });
+                } as Partial<TabsTriggerProps>);
               }
               return trigger;
             }),
-          });
+          } as Partial<TabsListProps>);
         }
         return null;
       })}
@@ -172,12 +164,13 @@ const TabsContent: React.FC<TabsContentProps> = ({
   return <div className={className}>{children}</div>;
 };
 
-// --- Main SettingsPage Component ---
 export default function SettingsPage() {
   const {
     user,
     fetchSettings,
-    updateProfileInfo,
+    updateProfile,
+    updateNotifications,
+    updatePreferences,
     updatePassword,
     updateProfileImage,
     isLoading,
@@ -185,7 +178,14 @@ export default function SettingsPage() {
     error,
   } = useSettingsStore();
 
-  const [profile, setProfile] = useState({
+  const [profile, setProfile] = useState<{
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    bio: string;
+    website: string;
+  }>({
     name: "",
     email: "",
     phone: "",
@@ -194,7 +194,14 @@ export default function SettingsPage() {
     website: "",
   });
 
-  const [notifications, setNotifications] = useState({
+  const [notifications, setNotifications] = useState<{
+    emailNotifications: boolean;
+    pushNotifications: boolean;
+    projectDeadlines: boolean;
+    clientMessages: boolean;
+    paymentReminders: boolean;
+    marketingEmails: boolean;
+  }>({
     emailNotifications: false,
     pushNotifications: false,
     projectDeadlines: false,
@@ -203,7 +210,14 @@ export default function SettingsPage() {
     marketingEmails: false,
   });
 
-  const [preferences, setPreferences] = useState({
+  const [preferences, setPreferences] = useState<{
+    theme: string;
+    language: string;
+    timezone: string;
+    currency: string;
+    measurementUnit: string;
+    defaultProjectDuration: string;
+  }>({
     theme: "light",
     language: "en",
     timezone: "America/New_York",
@@ -212,56 +226,55 @@ export default function SettingsPage() {
     defaultProjectDuration: "14",
   });
 
-  const [passwordFields, setPasswordFields] = useState({
+  const [passwordFields, setPasswordFields] = useState<{
+    currentPassword: string;
+    newPassword: string;
+    confirmNewPassword: string;
+  }>({
     currentPassword: "",
     newPassword: "",
     confirmNewPassword: "",
   });
 
-  // Fetch user data from the store on component mount
   useEffect(() => {
-    // if (!user) {
-      fetchSettings();
-    // }
-  }, []);
+    fetchSettings();
+  }, [fetchSettings]);
 
-  // Update local state when the store's user object changes
   useEffect(() => {
     if (user) {
       setProfile({
-        name: `${user.firstName} ${user.lastName}`,
+        name: `${user.firstName} ${user.lastName || ""}`,
         email: user.email,
-        phone: user.phone || "", // Assuming this field is not in the current user data but you want to display it
+        phone: user.phone || "",
         address: user.address || "",
         bio: user.bio || "",
         website: user.website || "",
       });
 
       setNotifications({
-        emailNotifications: user.settings.emailNotifications,
-        pushNotifications: user.settings.pushNotifications,
-        projectDeadlines: user.settings.projectDeadlines,
-        clientMessages: user.settings.clientMessages,
-        paymentReminders: user.settings.paymentReminders,
-        marketingEmails: user.settings.marketingEmails,
+        emailNotifications: user.settings?.emailNotifications ?? false,
+        pushNotifications: user.settings?.pushNotifications ?? false,
+        projectDeadlines: user.settings?.projectDeadlines ?? false,
+        clientMessages: user.settings?.clientMessages ?? false,
+        paymentReminders: user.settings?.paymentReminders ?? false,
+        marketingEmails: user.settings?.marketingEmails ?? false,
       });
 
       setPreferences({
-        theme: user.settings.theme,
-        language: user.settings.language,
-        timezone: user.settings.timezone,
-        currency: user.settings.currency,
-        measurementUnit: user.settings.measurementUnit,
-        defaultProjectDuration: user.settings.defaultProjectDuration,
+        theme: user.settings?.theme ?? "light",
+        language: user.settings?.language ?? "en",
+        timezone: user.settings?.timezone ?? "America/New_York",
+        currency: user.settings?.currency ?? "USD",
+        measurementUnit: user.settings?.measurementUnit ?? "inches",
+        defaultProjectDuration: user.settings?.defaultProjectDuration ?? "14",
       });
     }
   }, [user]);
 
-  // Handle save actions
   const handleSaveProfile = async () => {
     const [firstName, ...lastNameParts] = profile.name.split(" ");
     const lastName = lastNameParts.join(" ") || "";
-    await updateProfileInfo({
+    await updateProfile({
       firstName,
       lastName,
       email: profile.email,
@@ -273,11 +286,11 @@ export default function SettingsPage() {
   };
 
   const handleSaveNotifications = async () => {
-    await updateProfileInfo({}, notifications);
+    await updateNotifications(notifications);
   };
 
   const handleSavePreferences = async () => {
-    await updateProfileInfo({}, preferences);
+    await updatePreferences(preferences);
   };
 
   const handleUpdatePassword = async () => {
@@ -311,7 +324,6 @@ export default function SettingsPage() {
     );
   }
 
-  // Handle errors in a more visible way, or redirect if critical
   if (error) {
     return (
       <div className="p-6 text-center text-red-600">
@@ -321,7 +333,6 @@ export default function SettingsPage() {
     );
   }
 
-  // If user data hasn't loaded yet (after initial loading phase), return null or a spinner
   if (!user) {
     return null;
   }
@@ -474,7 +485,7 @@ export default function SettingsPage() {
                     onClick={() =>
                       document.getElementById("file-input")?.click()
                     }
-                    className="border border-gray-300 text-gray-700 hover:bg-gray-100 py-2 px-6 rounded-md" // Outline variant styling
+                    className="border border-gray-300 text-gray-700 hover:bg-gray-100 py-2 px-6 rounded-md"
                     disabled={isUpdating}
                   >
                     {isUpdating ? <Spinner /> : "Upload New Picture"}
@@ -744,7 +755,7 @@ export default function SettingsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="inches">Inches</SelectItem>
-                      <SelectItem value="centimeters">Centimeters</SelectItem>
+                      <SelectItem value="cm">Centimeters</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -755,7 +766,8 @@ export default function SettingsPage() {
                   </Label>
                   <Input
                     id="default-duration"
-                    type="number" className="p-1 px-2 border border-gray-300 rounded-md text-black/80"
+                    type="number"
+                    className="p-1 px-2 border border-gray-300 rounded-md text-black/80"
                     value={preferences.defaultProjectDuration}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setPreferences({
