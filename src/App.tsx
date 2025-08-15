@@ -65,7 +65,7 @@ export default function App() {
             }
           />
           <Route
-            path="/pattern-design"
+            path="/patterns"
             element={
               <AdminGuard>
                 <Default pageTitle="Pattern Design" />
