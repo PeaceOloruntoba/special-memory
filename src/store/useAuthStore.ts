@@ -30,7 +30,7 @@ interface AuthState {
   emailForPasswordReset: string | null;
   initializeAuth: () => Promise<void>;
 
-  register: (userData: any) => Promise<void>;
+  register: (userData: any, navigate: any) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 
@@ -103,7 +103,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      register: async (userData) => {
+      register: async (userData, navigate) => {
         set({ isLoading: true, error: null });
         try {
           const response = await api.post("/api/v1/auth/signup", userData);
@@ -113,6 +113,7 @@ export const useAuthStore = create<AuthState>()(
           });
           console.log("Registration response:", response.data);
           toast.success("Registration successful! Please verify your email.");
+          navigate("/verify-otp?email=" + userData.email);
         } catch (error: any) {
           const errorMessage =
             error.response?.data?.message || "Registration failed";

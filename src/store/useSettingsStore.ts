@@ -115,7 +115,8 @@ export const useSettingsStore = create<UserSettingsState>()(
       fetchSettings: async () => {
         set({ isLoading: true, error: null });
         try {
-          const response = await api.get("/api/user"); // GET /api/user to fetch user details
+          const response = await api.get("/api/v1/user");
+          console.log(response);
           const userData: UserData = response.data.data.user; // Adjust path based on your actual API response structure (e.g., response.data.user)
           set({
             user: userData,

@@ -23,10 +23,12 @@ import Badge from "../../components/ui/Badge";
 import { FaCrown } from "react-icons/fa";
 import Spinner from "../../components/ui/Spinner";
 import { useAuthStore } from "../../store/useAuthStore";
+import { useNavigate } from "react-router";
 
 export default function SignUpPage() {
   const { register, isLoading } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState<
     "free" | "premium" | "enterprise"
   >("free");
@@ -40,6 +42,7 @@ export default function SignUpPage() {
     agreeToTerms: false,
     subscribeToNewsletter: true,
     selectedPlan: "free" as "free" | "premium" | "enterprise",
+    roles: ["designer"],
   });
   const [step, setStep] = useState(1);
 
@@ -100,7 +103,7 @@ export default function SignUpPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    register(formData);
+    register(formData, navigate);
     console.log("Sign up data:", { ...formData, selectedPlan });
   };
 
@@ -422,25 +425,25 @@ export default function SignUpPage() {
                       <SelectValue placeholder="Select your business type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="independent-designer">
+                      <SelectItem value="Independent Designer">
                         Independent Designer
                       </SelectItem>
-                      <SelectItem value="fashion-studio">
+                      <SelectItem value="Fashion Studio">
                         Fashion Studio
                       </SelectItem>
-                      <SelectItem value="alterations">
+                      <SelectItem value="Alterations Service">
                         Alterations Service
                       </SelectItem>
-                      <SelectItem value="costume-design">
+                      <SelectItem value="Costume Design">
                         Costume Design
                       </SelectItem>
-                      <SelectItem value="bridal-boutique">
+                      <SelectItem value="Bridal Boutique">
                         Bridal Boutique
                       </SelectItem>
-                      <SelectItem value="fashion-school">
+                      <SelectItem value="Fashion School">
                         Fashion School
                       </SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

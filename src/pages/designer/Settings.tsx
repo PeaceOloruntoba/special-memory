@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FaUser,
   FaBell,
@@ -8,13 +8,55 @@ import {
   FaShieldAlt,
   FaDownload,
 } from "react-icons/fa";
-import Button from "../../components/ui/Button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/Card";
-import Badge from "../../components/ui/Badge";
-import Input from "../../components/ui/Input";
-import Label from "../../components/ui/Label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/Select";
-import Textarea from "../../components/ui/Textarea";
+import { toast } from "sonner";
+import { useSettingsStore } from "../../store/useSettingsStore";
+
+// --- Custom Components with Correct Styling ---
+
+// Button component with explicit variants
+const Button = ({
+  children,
+  onClick,
+  disabled,
+  variant = "primary",
+  className = "",
+  ...props
+}) => {
+  let styles = "py-2 px-4 rounded-md font-semibold transition-colors";
+  if (variant === "primary") {
+    styles += " bg-purple-600 text-white hover:bg-purple-700";
+  } else if (variant === "outline") {
+    styles += " border border-gray-300 text-gray-700 hover:bg-gray-100";
+  } else if (variant === "destructive") {
+    styles += " bg-red-600 text-white hover:bg-red-700";
+  }
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`${styles} ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
+
+// Badge component with explicit variants
+const Badge = ({ children, variant = "default", className = "", ...props }) => {
+  let styles =
+    "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium";
+  if (variant === "default") {
+    styles += " bg-gray-100 text-gray-800";
+  } else if (variant === "outline") {
+    styles += " border border-current text-current";
+  }
+  return (
+    <span className={`${styles} ${className}`} {...props}>
+      {children}
+    </span>
+  );
+};
 
 // Custom Switch Component
 const Switch = ({ checked, onCheckedChange, id }) => {
@@ -29,8 +71,8 @@ const Switch = ({ checked, onCheckedChange, id }) => {
           onChange={() => onCheckedChange(!checked)}
         />
         <div
-          className={`block bg-gray-600 w-14 h-8 rounded-full transition-colors ${
-            checked ? "bg-purple-600" : ""
+          className={`block w-14 h-8 rounded-full transition-colors ${
+            checked ? "bg-purple-600" : "bg-gray-600"
           }`}
         ></div>
         <div
@@ -43,7 +85,7 @@ const Switch = ({ checked, onCheckedChange, id }) => {
   );
 };
 
-// Custom Tabs Components
+// Custom Tabs Components (as provided, no changes needed)
 const Tabs = ({ defaultValue, children }) => {
   const [activeTab, setActiveTab] = useState(defaultValue);
   return (
@@ -107,22 +149,109 @@ const TabsContent = ({ children, value, className }) => {
   return <div className={className}>{children}</div>;
 };
 
+// UI Components (assuming these are from your component library, e.g., Shadcn/UI)
+// No changes here, assuming they are imported correctly.
+const Card = ({ children }) => (
+  <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+    {children}
+  </div>
+);
+const CardContent = ({ children, className = "" }) => (
+  <div className={`p-6 pt-0 ${className}`}>{children}</div>
+);
+const CardDescription = ({ children }) => (
+  <p className="text-sm text-muted-foreground">{children}</p>
+);
+const CardHeader = ({ children }) => (
+  <div className="flex flex-col space-y-1.5 p-6">{children}</div>
+);
+const CardTitle = ({ children, className = "" }) => (
+  <h3
+    className={`text-2xl font-semibold leading-none tracking-tight ${className}`}
+  >
+    {children}
+  </h3>
+);
+const Input = ({ ...props }) => (
+  <input
+    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    {...props}
+  />
+);
+const Label = ({ children, ...props }) => (
+  <label
+    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+    {...props}
+  >
+    {children}
+  </label>
+);
+const Select = ({ value, onValueChange, children }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <SelectTrigger onClick={() => setOpen(!open)}>
+        {children[0]}
+      </SelectTrigger>
+      {open && <SelectContent>{children[1]}</SelectContent>}
+    </div>
+  );
+};
+const SelectContent = ({ children }) => (
+  <div className="absolute z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+    {children}
+  </div>
+);
+const SelectItem = ({ children, value, onClick }) => (
+  <div
+    onClick={onClick}
+    className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+  >
+    {children}
+  </div>
+);
+const SelectTrigger = ({ children, ...props }) => (
+  <div
+    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    {...props}
+  >
+    {children}
+  </div>
+);
+const SelectValue = () => <span className="text-gray-900"></span>;
+const Textarea = ({ ...props }) => (
+  <textarea
+    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    {...props}
+  ></textarea>
+);
+
 export default function SettingsPage() {
+  const {
+    user,
+    fetchSettings,
+    updateProfileInfo,
+    updatePassword,
+    updateProfileImage,
+    isLoading,
+    isUpdating,
+  } = useSettingsStore();
+
   const [profile, setProfile] = useState({
-    name: "Jane Designer",
-    email: "jane@fashionstudio.com",
-    phone: "+1 (555) 123-4567",
-    address: "123 Fashion Ave, New York, NY 10001",
-    bio: "Professional fashion designer with 10+ years of experience in custom garments and haute couture.",
-    website: "www.janefashion.com",
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    bio: "",
+    website: "",
   });
 
   const [notifications, setNotifications] = useState({
-    emailNotifications: true,
-    pushNotifications: true,
-    projectDeadlines: true,
-    clientMessages: true,
-    paymentReminders: true,
+    emailNotifications: false,
+    pushNotifications: false,
+    projectDeadlines: false,
+    clientMessages: false,
+    paymentReminders: false,
     marketingEmails: false,
   });
 
@@ -134,6 +263,104 @@ export default function SettingsPage() {
     measurementUnit: "inches",
     defaultProjectDuration: "14",
   });
+
+  const [passwordFields, setPasswordFields] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmNewPassword: "",
+  });
+
+  // Fetch user data from the store on component mount
+  useEffect(() => {
+    if (!user) {
+      fetchSettings();
+    }
+  }, [user, fetchSettings]);
+
+  // Update local state when the store's user object changes
+  useEffect(() => {
+    if (user) {
+      setProfile({
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+        phone: "", // Assuming this field is not in the current user data
+        address: user.address || "",
+        bio: user.bio || "",
+        website: user.website || "",
+      });
+
+      setNotifications({
+        emailNotifications: user.settings.emailNotifications,
+        pushNotifications: user.settings.pushNotifications,
+        projectDeadlines: user.settings.projectDeadlines,
+        clientMessages: user.settings.clientMessages,
+        paymentReminders: user.settings.paymentReminders,
+        marketingEmails: user.settings.marketingEmails,
+      });
+
+      setPreferences({
+        theme: user.settings.theme,
+        language: user.settings.language,
+        timezone: user.settings.timezone,
+        currency: user.settings.currency,
+        measurementUnit: user.settings.measurementUnit,
+        defaultProjectDuration: user.settings.defaultProjectDuration,
+      });
+    }
+  }, [user]);
+
+  // Handle save actions
+  const handleSaveProfile = async () => {
+    const [firstName, ...lastNameParts] = profile.name.split(" ");
+    const lastName = lastNameParts.join(" ") || "";
+    await updateProfileInfo({
+      firstName,
+      lastName,
+      email: profile.email,
+      address: profile.address,
+      bio: profile.bio,
+      website: profile.website,
+    });
+  };
+
+  const handleSaveNotifications = async () => {
+    await updateProfileInfo({}, notifications);
+  };
+
+  const handleSavePreferences = async () => {
+    await updateProfileInfo({}, preferences);
+  };
+
+  const handleUpdatePassword = async () => {
+    const { currentPassword, newPassword, confirmNewPassword } = passwordFields;
+    if (newPassword !== confirmNewPassword) {
+      toast.error("New passwords do not match!");
+      return;
+    }
+    await updatePassword(currentPassword, newPassword);
+    setPasswordFields({
+      currentPassword: "",
+      newPassword: "",
+      confirmNewPassword: "",
+    });
+  };
+
+  const handleProfileImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      await updateProfileImage(file);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-lg text-gray-700">Loading settings...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -235,7 +462,9 @@ export default function SettingsPage() {
                 />
               </div>
 
-              <Button>Save Profile Changes</Button>
+              <Button onClick={handleSaveProfile} disabled={isUpdating}>
+                {isUpdating ? "Saving..." : "Save Profile Changes"}
+              </Button>
             </CardContent>
           </Card>
 
@@ -248,11 +477,34 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
-                <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center">
-                  <FaUser className="h-10 w-10 text-purple-600" />
+                <div className="w-20 h-20 overflow-hidden rounded-full flex items-center justify-center bg-purple-100">
+                  {user?.image ? (
+                    <img
+                      src={user.image}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <FaUser className="h-10 w-10 text-purple-600" />
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Button variant="outline">Upload New Picture</Button>
+                  <input
+                    id="file-input"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleProfileImageUpload}
+                  />
+                  <Button
+                    onClick={() =>
+                      document.getElementById("file-input")?.click()
+                    }
+                    variant="outline"
+                    disabled={isUpdating}
+                  >
+                    {isUpdating ? "Uploading..." : "Upload New Picture"}
+                  </Button>
                   <p className="text-sm text-gray-600">
                     JPG, PNG or GIF. Max size 2MB.
                   </p>
@@ -287,7 +539,7 @@ export default function SettingsPage() {
                   <Switch
                     id="email-notifications"
                     checked={notifications.emailNotifications}
-                    onCheckedChange={(checked) =>
+                    onCheckedChange={(checked: boolean) =>
                       setNotifications({
                         ...notifications,
                         emailNotifications: checked,
@@ -308,7 +560,7 @@ export default function SettingsPage() {
                   <Switch
                     id="push-notifications"
                     checked={notifications.pushNotifications}
-                    onCheckedChange={(checked) =>
+                    onCheckedChange={(checked: boolean) =>
                       setNotifications({
                         ...notifications,
                         pushNotifications: checked,
@@ -327,7 +579,7 @@ export default function SettingsPage() {
                   <Switch
                     id="project-deadlines"
                     checked={notifications.projectDeadlines}
-                    onCheckedChange={(checked) =>
+                    onCheckedChange={(checked: boolean) =>
                       setNotifications({
                         ...notifications,
                         projectDeadlines: checked,
@@ -346,7 +598,7 @@ export default function SettingsPage() {
                   <Switch
                     id="client-messages"
                     checked={notifications.clientMessages}
-                    onCheckedChange={(checked) =>
+                    onCheckedChange={(checked: boolean) =>
                       setNotifications({
                         ...notifications,
                         clientMessages: checked,
@@ -365,7 +617,7 @@ export default function SettingsPage() {
                   <Switch
                     id="payment-reminders"
                     checked={notifications.paymentReminders}
-                    onCheckedChange={(checked) =>
+                    onCheckedChange={(checked: boolean) =>
                       setNotifications({
                         ...notifications,
                         paymentReminders: checked,
@@ -384,7 +636,7 @@ export default function SettingsPage() {
                   <Switch
                     id="marketing-emails"
                     checked={notifications.marketingEmails}
-                    onCheckedChange={(checked) =>
+                    onCheckedChange={(checked: boolean) =>
                       setNotifications({
                         ...notifications,
                         marketingEmails: checked,
@@ -394,7 +646,9 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <Button>Save Notification Settings</Button>
+              <Button onClick={handleSaveNotifications} disabled={isUpdating}>
+                {isUpdating ? "Saving..." : "Save Notification Settings"}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -416,7 +670,7 @@ export default function SettingsPage() {
                   <Label htmlFor="theme">Theme</Label>
                   <Select
                     value={preferences.theme}
-                    onValueChange={(value) =>
+                    onValueChange={(value: string) =>
                       setPreferences({ ...preferences, theme: value })
                     }
                   >
@@ -435,7 +689,7 @@ export default function SettingsPage() {
                   <Label htmlFor="language">Language</Label>
                   <Select
                     value={preferences.language}
-                    onValueChange={(value) =>
+                    onValueChange={(value: string) =>
                       setPreferences({ ...preferences, language: value })
                     }
                   >
@@ -455,7 +709,7 @@ export default function SettingsPage() {
                   <Label htmlFor="timezone">Timezone</Label>
                   <Select
                     value={preferences.timezone}
-                    onValueChange={(value) =>
+                    onValueChange={(value: string) =>
                       setPreferences({ ...preferences, timezone: value })
                     }
                   >
@@ -483,7 +737,7 @@ export default function SettingsPage() {
                   <Label htmlFor="currency">Currency</Label>
                   <Select
                     value={preferences.currency}
-                    onValueChange={(value) =>
+                    onValueChange={(value: string) =>
                       setPreferences({ ...preferences, currency: value })
                     }
                   >
@@ -503,7 +757,7 @@ export default function SettingsPage() {
                   <Label htmlFor="measurement-unit">Measurement Unit</Label>
                   <Select
                     value={preferences.measurementUnit}
-                    onValueChange={(value) =>
+                    onValueChange={(value: string) =>
                       setPreferences({ ...preferences, measurementUnit: value })
                     }
                   >
@@ -535,7 +789,9 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <Button>Save Preferences</Button>
+              <Button onClick={handleSavePreferences} disabled={isUpdating}>
+                {isUpdating ? "Saving..." : "Save Preferences"}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -555,11 +811,18 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
                 <div>
                   <h3 className="font-semibold text-purple-900">
-                    Premium Plan
+                    {user?.plan} Plan
                   </h3>
                   <p className="text-sm text-purple-700">
-                    Unlimited clients, projects, and AI generations
+                    {user?.plan === "Premium"
+                      ? "Unlimited clients, projects, and AI generations"
+                      : "Free trial active until ..."}
                   </p>
+                  {user?.isSubActive && (
+                    <Badge className="bg-green-100 text-green-700">
+                      Active
+                    </Badge>
+                  )}
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-purple-900">$49</div>
@@ -639,10 +902,45 @@ export default function SettingsPage() {
                 <div>
                   <h4 className="font-semibold mb-2">Change Password</h4>
                   <div className="space-y-3">
-                    <Input type="password" placeholder="Current password" />
-                    <Input type="password" placeholder="New password" />
-                    <Input type="password" placeholder="Confirm new password" />
-                    <Button>Update Password</Button>
+                    <Input
+                      type="password"
+                      placeholder="Current password"
+                      value={passwordFields.currentPassword}
+                      onChange={(e) =>
+                        setPasswordFields({
+                          ...passwordFields,
+                          currentPassword: e.target.value,
+                        })
+                      }
+                    />
+                    <Input
+                      type="password"
+                      placeholder="New password"
+                      value={passwordFields.newPassword}
+                      onChange={(e) =>
+                        setPasswordFields({
+                          ...passwordFields,
+                          newPassword: e.target.value,
+                        })
+                      }
+                    />
+                    <Input
+                      type="password"
+                      placeholder="Confirm new password"
+                      value={passwordFields.confirmNewPassword}
+                      onChange={(e) =>
+                        setPasswordFields({
+                          ...passwordFields,
+                          confirmNewPassword: e.target.value,
+                        })
+                      }
+                    />
+                    <Button
+                      onClick={handleUpdatePassword}
+                      disabled={isUpdating}
+                    >
+                      {isUpdating ? "Updating..." : "Update Password"}
+                    </Button>
                   </div>
                 </div>
 
@@ -671,8 +969,8 @@ export default function SettingsPage() {
                         </div>
                       </div>
                       <Badge
-                        variant="outline"
                         className="text-green-600 border-green-600"
+                        variant="outline"
                       >
                         Active
                       </Badge>
