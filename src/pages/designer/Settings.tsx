@@ -1,7 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-} from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaUser,
   FaBell,
@@ -36,6 +33,7 @@ import Textarea from "../../components/ui/Textarea";
 
 // Import your Zustand store
 import { useSettingsStore } from "../../store/useSettingsStore";
+import Spinner from "../../components/ui/Spinner";
 
 // --- Custom Switch Component (as it's only used here) ---
 interface SwitchProps {
@@ -361,40 +359,44 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-2 flex flex-col">
                   <Label htmlFor="name">Full Name</Label>
                   <Input
                     id="name"
+                    className="p-1 px-2 border border-gray-300 rounded-md text-black/80"
                     value={profile.name}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setProfile({ ...profile, name: e.target.value })
                     }
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 flex flex-col">
                   <Label htmlFor="email">Email Address</Label>
                   <Input
                     id="email"
                     type="email"
+                    className="p-1 px-2 border border-gray-300 rounded-md text-black/80"
                     value={profile.email}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setProfile({ ...profile, email: e.target.value })
                     }
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 flex flex-col">
                   <Label htmlFor="phone">Phone Number</Label>
                   <Input
                     id="phone"
+                    className="p-1 px-2 border border-gray-300 rounded-md text-black/80"
                     value={profile.phone}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setProfile({ ...profile, phone: e.target.value })
                     }
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 flex flex-col">
                   <Label htmlFor="website">Website</Label>
                   <Input
+                    className="p-1 px-2 border border-gray-300 rounded-md text-black/80"
                     id="website"
                     value={profile.website}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -404,10 +406,11 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 flex flex-col">
                 <Label htmlFor="address">Business Address</Label>
                 <Input
                   id="address"
+                  className="p-1 px-2 border border-gray-300 rounded-md text-black/80"
                   value={profile.address}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setProfile({ ...profile, address: e.target.value })
@@ -415,10 +418,11 @@ export default function SettingsPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 flex flex-col">
                 <Label htmlFor="bio">Professional Bio</Label>
                 <Textarea
                   id="bio"
+                  className="p-1 px-2 border border-gray-300 rounded-md text-black/80"
                   value={profile.bio}
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                     setProfile({ ...profile, bio: e.target.value })
@@ -430,9 +434,9 @@ export default function SettingsPage() {
               <Button
                 onClick={handleSaveProfile}
                 disabled={isUpdating}
-                className="bg-purple-600 text-white hover:bg-purple-700"
+                className="bg-purple-600 text-white hover:bg-purple-700 py-2 px-6 rounded-md"
               >
-                {isUpdating ? "Saving..." : "Save Profile Changes"}
+                {isUpdating ? <Spinner /> : "Save Profile Changes"}
               </Button>
             </CardContent>
           </Card>
@@ -469,10 +473,10 @@ export default function SettingsPage() {
                     onClick={() =>
                       document.getElementById("file-input")?.click()
                     }
-                    className="border border-gray-300 text-gray-700 hover:bg-gray-100" // Outline variant styling
+                    className="border border-gray-300 text-gray-700 hover:bg-gray-100 py-2 px-6 rounded-md" // Outline variant styling
                     disabled={isUpdating}
                   >
-                    {isUpdating ? "Uploading..." : "Upload New Picture"}
+                    {isUpdating ? <Spinner /> : "Upload New Picture"}
                   </Button>
                   <p className="text-sm text-gray-600">
                     JPG, PNG or GIF. Max size 2MB.

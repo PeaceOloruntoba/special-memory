@@ -6,7 +6,7 @@ import { toast } from "sonner"; // For displaying notifications
 // --- Interfaces for User Data and Settings ---
 
 /**
- * Represents the structure of user data as returned by the backend's /api/user endpoint.
+ * Represents the structure of user data as returned by the backend's /api/v1/user endpoint.
  * This directly maps to your Mongoose UserSchema.
  */
 interface UserData {
@@ -142,7 +142,7 @@ export const useSettingsStore = create<UserSettingsState>()(
             payload.settings = settingsUpdates;
           }
 
-          const response = await api.patch("/api/user/profile", payload); // PATCH /api/user/profile
+          const response = await api.patch("/api/v1/user/profile", payload); // PATCH /api/v1/user/profile
           const updatedUser: UserData = response.data.data.user; // Adjust path as needed
           set({
             user: updatedUser,
@@ -161,8 +161,8 @@ export const useSettingsStore = create<UserSettingsState>()(
       updatePassword: async (currentPassword, newPassword) => {
         set({ isUpdating: true, error: null });
         try {
-          await api.patch("/api/user/password", {
-            // PATCH /api/user/password
+          await api.patch("/api/v1/user/password", {
+            // PATCH /api/v1/user/password
             currentPassword,
             newPassword,
           });
@@ -183,8 +183,8 @@ export const useSettingsStore = create<UserSettingsState>()(
           const formData = new FormData();
           formData.append("image", imageFile); // 'image' key must match backend's expected field name
 
-          const response = await api.patch("/api/user/image", formData, {
-            // PATCH /api/user/image
+          const response = await api.patch("/api/v1/user/image", formData, {
+            // PATCH /api/v1/user/image
             headers: {
               "Content-Type": "multipart/form-data", // Important for file uploads
             },
