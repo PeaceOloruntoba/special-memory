@@ -74,12 +74,12 @@ const Tabs: React.FC<TabsProps> = ({ defaultValue, children }) => {
   const isTabsList = (
     child: React.ReactNode
   ): child is React.ReactElement<TabsListProps> =>
-    React.isValidElement(child) && child.type === TabsList;
+    React.isValidElement(child) && (child.type === TabsList);
 
   const isTabsTrigger = (
     child: React.ReactNode
   ): child is React.ReactElement<TabsTriggerProps> =>
-    React.isValidElement(child) && child.type === TabsTrigger;
+    React.isValidElement(child) && (child.type === TabsTrigger);
 
   return (
     <div>
@@ -167,12 +167,20 @@ const TabsContent: React.FC<TabsContentProps> = ({
 export default function SettingsPage() {
   const {
     user,
+    subscriptionDetails,
     fetchSettings,
     updateProfile,
     updateNotifications,
     updatePreferences,
     updatePassword,
     updateProfileImage,
+    fetchSubscriptionDetails,
+    subscribePlan,
+    cancelSubscription,
+    updatePaymentMethod,
+    deleteAccount,
+    toggle2FA,
+    logoutAll,
     isLoading,
     isUpdating,
     error,
@@ -236,9 +244,12 @@ export default function SettingsPage() {
     confirmNewPassword: "",
   });
 
+  const [selectedPlan, setSelectedPlan] = useState("");
+
   useEffect(() => {
     fetchSettings();
-  }, [fetchSettings]);
+    fetchSubscriptionDetails();
+  }, [fetchSettings, fetchSubscriptionDetails]);
 
   useEffect(() => {
     if (user) {
@@ -313,6 +324,39 @@ export default function SettingsPage() {
     const file = event.target.files?.[0];
     if (file) {
       await updateProfileImage(file);
+    }
+  };
+
+  const handleSubscribePlan = async () => {
+    if (selectedPlan) {
+      // In a real app, paymentMethodId would come from Stripe Elements
+      const paymentMethodId = selectedPlan !== "free" ? "pm_card_visa" : undefined;
+      await subscribePlan(selectedPlan, paymentMethodId);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    await cancelSubscription();
+  };
+
+  const handleUpdatePaymentMethod = async () => {
+    // In a real app, get new paymentMethodId from Stripe Elements
+    const paymentMethodId = "pm_card_mastercard";
+    await updatePaymentMethod(paymentMethodId);
+  };
+
+  const handleToggle2FA = async (enable: boolean) => {
+    await toggle2FA(enable);
+  };
+
+  const handleLogoutAll = async () => {
+    await logoutAll();
+  };
+
+  const handleDeleteAccount = async () => {
+    if (window.confirm("Are you sure you want to delete your account? This cannot be undone.")) {
+      await deleteAccount();
+      window.location.href = "/logout"; // Redirect to logout
     }
   };
 
@@ -805,23 +849,59 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
                 <div>
                   <h3 className="font-semibold text-purple-900">
-                    {user?.plan === "premium" ? "Premium Plan" : "Free Plan"}
+                    {(subscriptionDetails?.planId
+                      ? subscriptionDetails.planId.charAt(0).toUpperCase() +
+                        subscriptionDetails.planId.slice(1)
+                      : "Free")}{" "}
+                    Plan
                   </h3>
                   <p className="text-sm text-purple-700">
-                    {user?.plan === "premium"
+                    {subscriptionDetails?.planId !== "free"
                       ? "Unlimited clients, projects, and AI generations"
                       : "Limited features for free users."}
                   </p>
-                  {user?.isSubActive && (
+                  {subscriptionDetails?.status === "active" && (
                     <Badge className="bg-green-100 text-green-700 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
                       Active
                     </Badge>
                   )}
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-purple-900">$49</div>
+                  <div className="text-2xl font-bold text-purple-900">
+                    {subscriptionDetails?.planId === "free" ? "$0" : "$49"}
+                  </div>
                   <div className="text-sm text-purple-700">per month</div>
                 </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="font-semibold">Change Plan</h4>
+                <Select value={selectedPlan} onValueChange={setSelectedPlan}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select plan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="free">Free</SelectItem>
+                    <SelectItem value="premium">Premium</SelectItem>
+                    <SelectItem value="enterprise">Enterprise</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={handleSubscribePlan}
+                  disabled={isUpdating || !selectedPlan}
+                  className="bg-purple-600 text-white hover:bg-purple-700 py-2 px-6 rounded-md"
+                >
+                  Update Plan
+                </Button>
+                {subscriptionDetails?.planId !== "free" && (
+                  <Button
+                    onClick={handleCancelSubscription}
+                    disabled={isUpdating}
+                    className="bg-red-600 text-white hover:bg-red-700 py-2 px-6 rounded-md"
+                  >
+                    Cancel Subscription
+                  </Button>
+                )}
               </div>
 
               <div className="space-y-4">
@@ -829,14 +909,23 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-6 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">
-                      VISA
+                      {subscriptionDetails?.paymentMethod?.brand || "N/A"}
                     </div>
                     <div>
-                      <div className="font-medium">•••• •••• •••• 4242</div>
-                      <div className="text-sm text-gray-600">Expires 12/25</div>
+                      <div className="font-medium">
+                        •••• •••• ••••{" "}
+                        {subscriptionDetails?.paymentMethod?.last4 || "N/A"}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Expires {subscriptionDetails?.paymentMethod?.exp || "N/A"}
+                      </div>
                     </div>
                   </div>
-                  <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100">
+                  <Button
+                    onClick={handleUpdatePaymentMethod}
+                    disabled={isUpdating}
+                    className="border border-gray-300 text-gray-700 hover:bg-gray-100 py-2 px-6 rounded-md"
+                  >
                     Update
                   </Button>
                 </div>
@@ -845,11 +934,7 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <h4 className="font-semibold">Billing History</h4>
                 <div className="space-y-2">
-                  {[
-                    { date: "Jan 1, 2024", amount: "$49.00", status: "Paid" },
-                    { date: "Dec 1, 2023", amount: "$49.00", status: "Paid" },
-                    { date: "Nov 1, 2023", amount: "$49.00", status: "Paid" },
-                  ].map((invoice, index) => (
+                  {(subscriptionDetails?.invoices || []).map((invoice, index) => (
                     <div
                       key={index}
                       className="flex items-center justify-between p-3 border rounded-lg"
@@ -857,7 +942,9 @@ export default function SettingsPage() {
                       <div>
                         <div className="font-medium">{invoice.date}</div>
                         <div className="text-sm text-gray-600">
-                          Premium Plan
+                          {(subscriptionDetails?.planId?.charAt(0)?.toUpperCase() ?? "") +
+                            (subscriptionDetails?.planId?.slice(1) ?? "")}{" "}
+                          Plan
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
@@ -865,12 +952,18 @@ export default function SettingsPage() {
                         <Badge className="text-green-600 border-green-600 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border border-current text-current">
                           {invoice.status}
                         </Badge>
-                        <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100">
+                        <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100 py-2 px-6 rounded-md">
                           <FaDownload className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                   ))}
+                  {(!subscriptionDetails?.invoices ||
+                    subscriptionDetails.invoices.length === 0) && (
+                    <p className="text-sm text-gray-600">
+                      No billing history available.
+                    </p>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -903,6 +996,7 @@ export default function SettingsPage() {
                           currentPassword: e.target.value,
                         })
                       }
+                      className="p-1 px-2 border border-gray-300 rounded-md text-black/80"
                     />
                     <Input
                       type="password"
@@ -914,6 +1008,7 @@ export default function SettingsPage() {
                           newPassword: e.target.value,
                         })
                       }
+                      className="p-1 px-2 border border-gray-300 rounded-md text-black/80"
                     />
                     <Input
                       type="password"
@@ -925,13 +1020,14 @@ export default function SettingsPage() {
                           confirmNewPassword: e.target.value,
                         })
                       }
+                      className="p-1 px-2 border border-gray-300 rounded-md text-black/80"
                     />
                     <Button
                       onClick={handleUpdatePassword}
                       disabled={isUpdating}
-                      className="bg-purple-600 text-white hover:bg-purple-700"
+                      className="bg-purple-600 text-white hover:bg-purple-700 py-2 px-6 rounded-md"
                     >
-                      {isUpdating ? "Updating..." : "Update Password"}
+                      {isUpdating ? <Spinner /> : "Update Password"}
                     </Button>
                   </div>
                 </div>
@@ -946,27 +1042,46 @@ export default function SettingsPage() {
                         Add an extra layer of security to your account
                       </p>
                     </div>
-                    <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100">
-                      Enable 2FA
-                    </Button>
+                    <Switch
+                      id="2fa"
+                      checked={user?.is2FAEnabled ?? false}
+                      onCheckedChange={handleToggle2FA}
+                    />
                   </div>
                 </div>
 
                 <div className="border-t pt-4">
                   <h4 className="font-semibold mb-2">Active Sessions</h4>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <div className="font-medium">Current Session</div>
-                        <div className="text-sm text-gray-600">
-                          Chrome on MacOS • New York, NY
+                    {(user?.activeSessions || []).map((session, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
+                        <div>
+                          <div className="font-medium">{session.device}</div>
+                          <div className="text-sm text-gray-600">
+                            {session.location} • Last active:{" "}
+                            {new Date(session.lastActive).toLocaleString()}
+                          </div>
                         </div>
+                        <Badge className="text-green-600 border-green-600 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border border-current text-current">
+                          {session.current ? "Current" : "Active"}
+                        </Badge>
                       </div>
-                      <Badge className="text-green-600 border-green-600 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border border-current text-current">
-                        Active
-                      </Badge>
-                    </div>
+                    ))}
+                    {(!user?.activeSessions ||
+                      user.activeSessions.length === 0) && (
+                      <p className="text-sm text-gray-600">No active sessions.</p>
+                    )}
                   </div>
+                  <Button
+                    onClick={handleLogoutAll}
+                    disabled={isUpdating}
+                    className="mt-4 bg-red-600 text-white hover:bg-red-700 py-2 px-6 rounded-md"
+                  >
+                    Logout All Sessions
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -989,10 +1104,10 @@ export default function SettingsPage() {
                 <div>
                   <h4 className="font-semibold mb-2">Export Data</h4>
                   <p className="text-sm text-gray-600 mb-3">
-                    Download a copy of all your data including clients,
-                    projects, and patterns.
+                    Download a copy of all your data including clients, projects,
+                    and patterns.
                   </p>
-                  <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100">
+                  <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100 py-2 px-6 rounded-md">
                     <FaDownload className="h-4 w-4 mr-2" />
                     Export All Data
                   </Button>
@@ -1001,10 +1116,10 @@ export default function SettingsPage() {
                 <div className="border-t pt-4">
                   <h4 className="font-semibold mb-2">Data Backup</h4>
                   <p className="text-sm text-gray-600 mb-3">
-                    Your data is automatically backed up daily. Last backup:
-                    Today at 3:00 AM
+                    Your data is automatically backed up daily. Last backup: Today
+                    at 3:00 AM
                   </p>
-                  <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100">
+                  <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100 py-2 px-6 rounded-md">
                     Create Manual Backup
                   </Button>
                 </div>
@@ -1016,10 +1131,12 @@ export default function SettingsPage() {
                   <div className="space-y-3">
                     <div>
                       <p className="text-sm text-gray-600 mb-2">
-                        Delete all data permanently. This action cannot be
-                        undone.
+                        Delete all data permanently. This action cannot be undone.
                       </p>
-                      <Button className="bg-red-600 text-white hover:bg-red-700">
+                      <Button
+                        disabled
+                        className="bg-red-600 text-white hover:bg-red-700 py-2 px-6 rounded-md"
+                      >
                         Delete All Data
                       </Button>
                     </div>
@@ -1027,7 +1144,10 @@ export default function SettingsPage() {
                       <p className="text-sm text-gray-600 mb-2">
                         Close your account and delete all associated data.
                       </p>
-                      <Button className="bg-red-600 text-white hover:bg-red-700">
+                      <Button
+                        onClick={handleDeleteAccount}
+                        className="bg-red-600 text-white hover:bg-red-700 py-2 px-6 rounded-md"
+                      >
                         Delete Account
                       </Button>
                     </div>
