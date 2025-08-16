@@ -356,7 +356,7 @@ export default function SettingsPage() {
   const handleDeleteAccount = async () => {
     if (window.confirm("Are you sure you want to delete your account? This cannot be undone.")) {
       await deleteAccount();
-      window.location.href = "/logout"; // Redirect to logout
+      window.location.href = "/login"; // Redirect to logout
     }
   };
 
@@ -372,7 +372,7 @@ export default function SettingsPage() {
     return (
       <div className="p-6 text-center text-red-600">
         <p className="text-lg">Error: {error}</p>
-        <p className="text-sm">Please try again later or contact support.</p>
+        <p className="text-sm">Please reload try again later or contact support.</p>
       </div>
     );
   }
@@ -393,7 +393,7 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="profile">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="md:grid gap-8 w-full grid-cols-6 overflow-x-scroll">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="preferences">Preferences</TabsTrigger>
