@@ -30,6 +30,12 @@ import {
 import Textarea from "../../components/ui/Textarea";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import Spinner from "../../components/ui/Spinner";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import CheckoutForm from "../../components/stripe/CheckoutForm";
+
+// Initialize Stripe with your publishable key
+const stripePromise = loadStripe("pk_test_your_publishable_key"); // Replace with your actual Stripe publishable key
 
 interface SwitchProps {
   checked: boolean;
@@ -74,12 +80,12 @@ const Tabs: React.FC<TabsProps> = ({ defaultValue, children }) => {
   const isTabsList = (
     child: React.ReactNode
   ): child is React.ReactElement<TabsListProps> =>
-    React.isValidElement(child) && (child.type === TabsList);
+    React.isValidElement(child) && child.type === TabsList;
 
   const isTabsTrigger = (
     child: React.ReactNode
   ): child is React.ReactElement<TabsTriggerProps> =>
-    React.isValidElement(child) && (child.type === TabsTrigger);
+    React.isValidElement(child) && child.type === TabsTrigger;
 
   return (
     <div>
@@ -177,7 +183,6 @@ export default function SettingsPage() {
     fetchSubscriptionDetails,
     subscribePlan,
     cancelSubscription,
-    updatePaymentMethod,
     deleteAccount,
     toggle2FA,
     logoutAll,
@@ -245,6 +250,7 @@ export default function SettingsPage() {
   });
 
   const [selectedPlan, setSelectedPlan] = useState("");
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -328,10 +334,49 @@ export default function SettingsPage() {
   };
 
   const handleSubscribePlan = async () => {
-    if (selectedPlan) {
-      // In a real app, paymentMethodId would come from Stripe Elements
-      const paymentMethodId = selectedPlan !== "free" ? "pm_card_visa" : undefined;
+    if (!selectedPlan) {
+      toast.error("Please select a plan.");
+      return;
+    }
+
+    // If user selects 'free' plan, no payment method is needed
+    if (selectedPlan === "free") {
+      try {
+        await subscribePlan(selectedPlan);
+        setSelectedPlan("");
+      } catch (error) {
+        // Error is handled in the store
+      }
+      return;
+    }
+
+    // For paid plans, check if a payment method exists
+    if (!subscriptionDetails?.paymentMethod) {
+      setShowCheckoutModal(true); // Show modal to collect payment method
+    } else {
+      // Use existing payment method
+      try {
+        await subscribePlan(
+          selectedPlan,
+          subscriptionDetails.paymentMethod.last4
+        );
+        setSelectedPlan("");
+      } catch (error) {
+        // Error is handled in the store
+      }
+    }
+  };
+
+  // Callback from CheckoutForm after successful payment method creation
+  const handlePaymentMethodCreated = async (paymentMethodId: string) => {
+    try {
       await subscribePlan(selectedPlan, paymentMethodId);
+      setShowCheckoutModal(false);
+      setSelectedPlan("");
+      toast.success("Plan updated successfully");
+    } catch (error) {
+      // Error is handled in the store, but we can close the modal
+      setShowCheckoutModal(false);
     }
   };
 
@@ -340,9 +385,7 @@ export default function SettingsPage() {
   };
 
   const handleUpdatePaymentMethod = async () => {
-    // In a real app, get new paymentMethodId from Stripe Elements
-    const paymentMethodId = "pm_card_mastercard";
-    await updatePaymentMethod(paymentMethodId);
+    setShowCheckoutModal(true); // Open modal to update payment method
   };
 
   const handleToggle2FA = async (enable: boolean) => {
@@ -354,9 +397,13 @@ export default function SettingsPage() {
   };
 
   const handleDeleteAccount = async () => {
-    if (window.confirm("Are you sure you want to delete your account? This cannot be undone.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete your account? This cannot be undone."
+      )
+    ) {
       await deleteAccount();
-      window.location.href = "/login"; // Redirect to logout
+      window.location.href = "/login";
     }
   };
 
@@ -372,7 +419,9 @@ export default function SettingsPage() {
     return (
       <div className="p-6 text-center text-red-600">
         <p className="text-lg">Error: {error}</p>
-        <p className="text-sm">Please reload try again later or contact support.</p>
+        <p className="text-sm">
+          Please reload try again later or contact support.
+        </p>
       </div>
     );
   }
@@ -383,6 +432,31 @@ export default function SettingsPage() {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Checkout Modal */}
+      {showCheckoutModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-semibold mb-4">
+              {subscriptionDetails?.paymentMethod
+                ? "Update Payment Method"
+                : "Add Payment Method"}
+            </h2>
+            <Elements stripe={stripePromise}>
+              <CheckoutForm
+                plan={selectedPlan}
+                onSuccess={handlePaymentMethodCreated}
+              />
+            </Elements>
+            <Button
+              onClick={() => setShowCheckoutModal(false)}
+              className="mt-4 w-full border border-gray-300 text-gray-700 hover:bg-gray-100 py-2 px-6 rounded-md"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
@@ -849,10 +923,10 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
                 <div>
                   <h3 className="font-semibold text-purple-900">
-                    {(subscriptionDetails?.planId
+                    {subscriptionDetails?.planId
                       ? subscriptionDetails.planId.charAt(0).toUpperCase() +
                         subscriptionDetails.planId.slice(1)
-                      : "Free")}{" "}
+                      : "Free"}{" "}
                     Plan
                   </h3>
                   <p className="text-sm text-purple-700">
@@ -917,7 +991,8 @@ export default function SettingsPage() {
                         {subscriptionDetails?.paymentMethod?.last4 || "N/A"}
                       </div>
                       <div className="text-sm text-gray-600">
-                        Expires {subscriptionDetails?.paymentMethod?.exp || "N/A"}
+                        Expires{" "}
+                        {subscriptionDetails?.paymentMethod?.exp || "N/A"}
                       </div>
                     </div>
                   </div>
@@ -934,30 +1009,35 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <h4 className="font-semibold">Billing History</h4>
                 <div className="space-y-2">
-                  {(subscriptionDetails?.invoices || []).map((invoice, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 border rounded-lg"
-                    >
-                      <div>
-                        <div className="font-medium">{invoice.date}</div>
-                        <div className="text-sm text-gray-600">
-                          {(subscriptionDetails?.planId?.charAt(0)?.toUpperCase() ?? "") +
-                            (subscriptionDetails?.planId?.slice(1) ?? "")}{" "}
-                          Plan
+                  {(subscriptionDetails?.invoices || []).map(
+                    (invoice, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
+                        <div>
+                          <div className="font-medium">{invoice.date}</div>
+                          <div className="text-sm text-gray-600">
+                            {(subscriptionDetails?.planId
+                              ?.charAt(0)
+                              ?.toUpperCase() ?? "") +
+                              (subscriptionDetails?.planId?.slice(1) ??
+                                "")}{" "}
+                            Plan
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="font-medium">{invoice.amount}</div>
+                          <Badge className="text-green-600 border-green-600 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border border-current text-current">
+                            {invoice.status}
+                          </Badge>
+                          <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100 py-2 px-6 rounded-md">
+                            <FaDownload className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="font-medium">{invoice.amount}</div>
-                        <Badge className="text-green-600 border-green-600 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border border-current text-current">
-                          {invoice.status}
-                        </Badge>
-                        <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100 py-2 px-6 rounded-md">
-                          <FaDownload className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                   {(!subscriptionDetails?.invoices ||
                     subscriptionDetails.invoices.length === 0) && (
                     <p className="text-sm text-gray-600">
@@ -1072,7 +1152,9 @@ export default function SettingsPage() {
                     ))}
                     {(!user?.activeSessions ||
                       user.activeSessions.length === 0) && (
-                      <p className="text-sm text-gray-600">No active sessions.</p>
+                      <p className="text-sm text-gray-600">
+                        No active sessions.
+                      </p>
                     )}
                   </div>
                   <Button
@@ -1104,8 +1186,8 @@ export default function SettingsPage() {
                 <div>
                   <h4 className="font-semibold mb-2">Export Data</h4>
                   <p className="text-sm text-gray-600 mb-3">
-                    Download a copy of all your data including clients, projects,
-                    and patterns.
+                    Download a copy of all your data including clients,
+                    projects, and patterns.
                   </p>
                   <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100 py-2 px-6 rounded-md">
                     <FaDownload className="h-4 w-4 mr-2" />
@@ -1116,8 +1198,8 @@ export default function SettingsPage() {
                 <div className="border-t pt-4">
                   <h4 className="font-semibold mb-2">Data Backup</h4>
                   <p className="text-sm text-gray-600 mb-3">
-                    Your data is automatically backed up daily. Last backup: Today
-                    at 3:00 AM
+                    Your data is automatically backed up daily. Last backup:
+                    Today at 3:00 AM
                   </p>
                   <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100 py-2 px-6 rounded-md">
                     Create Manual Backup
@@ -1131,7 +1213,8 @@ export default function SettingsPage() {
                   <div className="space-y-3">
                     <div>
                       <p className="text-sm text-gray-600 mb-2">
-                        Delete all data permanently. This action cannot be undone.
+                        Delete all data permanently. This action cannot be
+                        undone.
                       </p>
                       <Button
                         disabled

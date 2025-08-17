@@ -1,26 +1,18 @@
 import React, { useState } from "react";
-import {
-  useStripe,
-  useElements,
-  CardElement,
-} from "@stripe/react-stripe-js";
-import Button from "../ui/Button"; // Assuming you have a Button component
+import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
+import Button from "../ui/Button";
 import { BiLoaderAlt } from "react-icons/bi";
 import { toast } from "sonner";
-import usePricingStore from "../../store/usePricingStore";
-import { useNavigate } from "react-router";
 import { toTitleCase } from "../../lib/utils";
 
 interface CheckoutFormProps {
-  plan: string; // The plan the user is subscribing to (e.g., "premium", "enterprise")
+  plan: string;
+  onSuccess?: (paymentMethodId: string) => void; // Added callback
 }
 
-const CheckoutForm: React.FC<CheckoutFormProps> = ({ plan }) => {
+const CheckoutForm: React.FC<CheckoutFormProps> = ({ plan, onSuccess }) => {
   const stripe = useStripe();
   const elements = useElements();
-  const navigate = useNavigate();
-  const { subscribeToPlan } = usePricingStore();
-
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -30,15 +22,12 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ plan }) => {
     setErrorMessage(null);
 
     if (!stripe || !elements) {
-      // Stripe.js has not yet loaded.
-      // Make sure to disable form submission until Stripe.js has loaded.
       setLoading(false);
+      toast.error("Stripe is not loaded. Please try again.");
       return;
     }
 
     try {
-      // Create a PaymentMethod. For this example, we're using CardElement.
-      // In a real application, you might use PaymentElement.
       const cardElement = elements.getElement(CardElement);
       const { paymentMethod, error } = await stripe.createPaymentMethod({
         type: "card",
@@ -52,20 +41,18 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ plan }) => {
         return;
       }
 
-      // Call your backend to complete the subscription
-      // In a real application, your backend would create a Stripe Subscription
-      // and handle the payment confirmation.
-      await subscribeToPlan(plan, paymentMethod?.id);
+      // Call onSuccess with the payment method ID
+      if (paymentMethod?.id && onSuccess) {
+        onSuccess(paymentMethod.id);
+      }
 
-      toast.success("Subscription successful! Redirecting...");
-      navigate("/pricing"); // Redirect to pricing page or dashboard on success
+      setLoading(false);
     } catch (err: any) {
       console.error("Payment submission error:", err);
       setErrorMessage(
-        err.message || "An unexpected error occurred during subscription."
+        err.message || "An unexpected error occurred during payment setup."
       );
-      toast.error(err.message || "Subscription failed. Please try again.");
-    } finally {
+      toast.error(err.message || "Payment setup failed. Please try again.");
       setLoading(false);
     }
   };
@@ -73,10 +60,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ plan }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="p-4 border rounded-md shadow-sm bg-white">
-        {/*
-          Using CardElement for simplicity. For more robust UI and payment methods,
-          consider using <PaymentElement /> and setting up a Payment Intent on your backend.
-        */}
         <CardElement
           options={{
             style: {
@@ -107,7 +90,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ plan }) => {
         {loading ? (
           <BiLoaderAlt className="animate-spin mr-2" />
         ) : (
-          `Confirm Subscription for ${toTitleCase(plan)}` // Using toTitleCase here too
+          `Confirm Subscription for ${toTitleCase(plan)}`
         )}
       </Button>
     </form>
