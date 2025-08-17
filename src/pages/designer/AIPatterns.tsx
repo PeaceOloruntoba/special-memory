@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -20,93 +20,146 @@ import {
 import Badge from "../../components/ui/Badge";
 import {
   FaDownload,
-  FaSave,
   FaMagic,
   FaImage,
   FaPalette,
   FaLock,
+  FaEdit,
+  FaTrash,
 } from "react-icons/fa";
 import { FaHandSparkles } from "react-icons/fa6";
 import { PlanRestrictions } from "../../components/PlanRestrictions";
+import { usePatternStore } from "../../store/usePatternStore";
+import Modal from "../../components/ui/Modal";
 
-interface GeneratedPattern {
-  id: string;
-  name: string;
-  description: string;
+interface FormData {
+  garmentType: string;
   style: string;
-  difficulty: string;
-  imageUrl: string;
-  instructions: string[];
-  materials: string[];
+  sizeRange: string;
+  fabricType: string;
+  occasion: string;
+  description: string;
+  name: string;
 }
 
 export default function AIPatternPage() {
+  const {
+    publicPatterns,
+    userPatterns,
+    loading,
+    error,
+    fetchPublicPatterns,
+    fetchUserPatterns,
+    createPattern,
+    updatePattern,
+    deletePattern,
+  } = usePatternStore();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedPatterns, setGeneratedPatterns] = useState<
-    GeneratedPattern[]
-  >([]);
-  const [generationsUsed, setGenerationsUsed] = useState(3); // Simulated usage
-  const [currentPlan] = useState<"free" | "premium" | "enterprise">("free"); // Simulated current plan
-  const [formData, setFormData] = useState({
+  const [generationsUsed, setGenerationsUsed] = useState(3); // Simulated; replace with backend tracking if available
+  const [currentPlan] = useState<"free" | "premium" | "enterprise">("free"); // Simulated
+  const [formData, setFormData] = useState<FormData>({
     garmentType: "",
     style: "",
-    size: "",
-    fabric: "",
+    sizeRange: "",
+    fabricType: "",
     occasion: "",
     description: "",
+    name: "",
   });
+  const [editPattern, setEditPattern] = useState<FormData | null>(null);
+  const [editPatternId, setEditPatternId] = useState<string | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletePatternId, setDeletePatternId] = useState<string | null>(null);
 
-  const generatePattern = async () => {
-    // Check if user has reached free plan limit
-    if (currentPlan === "free" && generationsUsed >= 5) {
-      return; // This would show the restriction component
-    }
+  useEffect(() => {
+    fetchPublicPatterns();
+    fetchUserPatterns();
+  }, [fetchPublicPatterns, fetchUserPatterns]);
+
+  const handleCreate = async () => {
+    if (currentPlan === "free" && generationsUsed >= 5) return;
 
     setIsGenerating(true);
+    try {
+      await createPattern(
+        {
+          name: formData.name || `${formData.style} ${formData.garmentType}`,
+          description: formData.description,
+          garmentType: formData.garmentType,
+          style: formData.style,
+          sizeRange: formData.sizeRange,
+          fabricType: formData.fabricType,
+          occasion: formData.occasion,
+          additionalDetails: formData.description,
+        },
+        null,
+        true
+      );
+      setGenerationsUsed((prev) => prev + 1);
+      setFormData({
+        garmentType: "",
+        style: "",
+        sizeRange: "",
+        fabricType: "",
+        occasion: "",
+        description: "",
+        name: "",
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
-    // Simulate AI generation delay
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+  const handleEdit = (pattern: FormData & { _id: string }) => {
+    setEditPattern({
+      name: pattern.name,
+      description: pattern.description || "",
+      garmentType: pattern.garmentType,
+      style: pattern.style,
+      sizeRange: pattern.sizeRange,
+      fabricType: pattern.fabricType,
+      occasion: pattern.occasion || "",
+    });
+    setEditPatternId(pattern._id);
+    setIsEditModalOpen(true);
+  };
 
-    const newPattern: GeneratedPattern = {
-      id: Date.now().toString(),
-      name: `${formData.style} ${formData.garmentType}`,
-      description:
-        formData.description ||
-        `A beautiful ${formData.style.toLowerCase()} ${formData.garmentType.toLowerCase()} perfect for ${
-          formData.occasion
-        }`,
-      style: formData.style,
-      difficulty: "Intermediate",
-      imageUrl: `/placeholder.svg?height=300&width=400&text=${formData.garmentType}+Pattern`,
-      instructions: [
-        "Cut fabric pieces according to pattern layout",
-        'Sew shoulder seams with 5/8" seam allowance',
-        "Attach sleeves using set-in sleeve technique",
-        "Sew side seams from armpit to hem",
-        "Finish neckline with bias tape or facing",
-        "Hem bottom edge to desired length",
-        "Press all seams and finish raw edges",
-      ],
-      materials: [
-        `${formData.fabric} fabric - 2.5 yards`,
-        "Thread - matching color",
-        "Interfacing - lightweight",
-        "Zipper - 22 inch invisible",
-        "Buttons - 6 pieces",
-        "Bias tape - 1 yard",
-      ],
-    };
+  const handleUpdate = async () => {
+    if (!editPattern || !editPatternId) return;
+    try {
+      await updatePattern(editPatternId, editPattern);
+      setIsEditModalOpen(false);
+      setEditPattern(null);
+      setEditPatternId(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-    setGeneratedPatterns((prev) => [newPattern, ...prev]);
-    setGenerationsUsed((prev) => prev + 1);
-    setIsGenerating(false);
+  const handleDelete = (patternId: string) => {
+    setDeletePatternId(patternId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletePatternId) return;
+    try {
+      await deletePattern(deletePatternId);
+      setIsDeleteModalOpen(false);
+      setDeletePatternId(null);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const isAtLimit = currentPlan === "free" && generationsUsed >= 5;
 
   return (
     <div className="p-6 space-y-6">
-      {/* Usage indicator for free plan */}
+      {/* Usage indicator */}
       {currentPlan === "free" && (
         <Card className="border-orange-200 bg-orange-50">
           <CardContent className="p-4">
@@ -129,89 +182,62 @@ export default function AIPatternPage() {
         </Card>
       )}
 
-      {/* Pattern Library */}
+      {/* Error Display */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <p className="text-red-600">{error}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Pattern Library (Public Patterns) */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FaImage className="h-5 w-5" />
-            Pattern Library
+            Public Pattern Library
             {currentPlan === "free" && (
-              <Badge
-                className="text-orange-600 border-orange-600 border py-2 px-6 rounded-md"
-              >
+              <Badge className="text-orange-600 border-orange-600 border py-2 px-6 rounded-md">
                 Limited on Free
               </Badge>
             )}
           </CardTitle>
           <CardDescription>
-            Browse and use patterns from your collection
+            Browse and use patterns from the public collection
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {loading && <p className="text-center">Loading...</p>}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {[
-              {
-                name: "A-Line Dress",
-                category: "Dress",
-                uses: 12,
-                premium: false,
-              },
-              {
-                name: "Blazer Classic",
-                category: "Jacket",
-                uses: 8,
-                premium: true,
-              },
-              {
-                name: "Pencil Skirt",
-                category: "Skirt",
-                uses: 15,
-                premium: false,
-              },
-              {
-                name: "Button Shirt",
-                category: "Shirt",
-                uses: 20,
-                premium: false,
-              },
-              {
-                name: "Wide Leg Pants",
-                category: "Pants",
-                uses: 6,
-                premium: true,
-              },
-              { name: "Wrap Dress", category: "Dress", uses: 9, premium: true },
-            ].map((pattern) => (
+            {publicPatterns.map((pattern) => (
               <div
-                key={pattern.name}
+                key={pattern._id}
                 className="text-center group cursor-pointer relative"
               >
-                <div
-                  className={`w-full h-20 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg mb-2 flex items-center justify-center group-hover:shadow-md transition-shadow ${
-                    pattern.premium && currentPlan === "free"
-                      ? "opacity-50"
-                      : ""
-                  }`}
-                >
-                  <FaPalette className="h-6 w-6 text-purple-600" />
-                  {pattern.premium && currentPlan === "free" && (
-                    <FaLock className="absolute top-1 right-1 h-4 w-4 text-gray-500 bg-white rounded-full p-0.5" />
+                <div className="w-full h-20 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg mb-2 flex items-center justify-center group-hover:shadow-md transition-shadow">
+                  {pattern.image_urls[0] ? (
+                    <img
+                      src={pattern.image_urls[0]}
+                      alt={pattern.name}
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                  ) : (
+                    <FaPalette className="h-6 w-6 text-purple-600" />
                   )}
                 </div>
                 <p className="text-sm font-medium truncate">{pattern.name}</p>
-                <p className="text-xs text-gray-500">{pattern.category}</p>
+                <p className="text-xs text-gray-500">{pattern.garmentType}</p>
                 <Badge className="border border-gray-300 py-2 px-6 rounded-md text-xs mt-1">
-                  {pattern.uses} uses
+                  {pattern.isAiGenerated ? "AI" : "User"} Generated
                 </Badge>
-                {pattern.premium && currentPlan === "free" && (
-                  <Badge
-                    className="text-xs mt-1 text-purple-600 border py-2 px-6 rounded-md border-purple-600"
-                  >
-                    Premium
-                  </Badge>
-                )}
               </div>
             ))}
+            {publicPatterns.length === 0 && !loading && (
+              <p className="text-center col-span-full">
+                No public patterns available.
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -237,15 +263,27 @@ export default function AIPatternPage() {
                 Pattern Specifications
               </CardTitle>
               <CardDescription>
-                Describe your desired pattern and let AI create it for you
+                Describe your desired pattern and let AI create it
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
+                <Label htmlFor="name">Pattern Name</Label>
+                <Input
+                  id="name"
+                  placeholder="Enter pattern name"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  disabled={isAtLimit}
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="garmentType">Garment Type</Label>
                 <Select
                   value={formData.garmentType}
-                  onValueChange={(value: any) =>
+                  onValueChange={(value) =>
                     setFormData({ ...formData, garmentType: value })
                   }
                   disabled={isAtLimit}
@@ -254,21 +292,26 @@ export default function AIPatternPage() {
                     <SelectValue placeholder="Select garment type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="dress">Dress</SelectItem>
-                    <SelectItem value="blouse">Blouse</SelectItem>
-                    <SelectItem value="skirt">Skirt</SelectItem>
-                    <SelectItem value="pants">Pants</SelectItem>
-                    <SelectItem value="jacket">Jacket</SelectItem>
-                    <SelectItem value="coat">Coat</SelectItem>
+                    {[
+                      "Dress",
+                      "Blouse",
+                      "Skirt",
+                      "Pants",
+                      "Jacket",
+                      "Other",
+                    ].map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="style">Style</Label>
                 <Select
                   value={formData.style}
-                  onValueChange={(value: any) =>
+                  onValueChange={(value) =>
                     setFormData({ ...formData, style: value })
                   }
                   disabled={isAtLimit}
@@ -277,22 +320,28 @@ export default function AIPatternPage() {
                     <SelectValue placeholder="Select style" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="casual">Casual</SelectItem>
-                    <SelectItem value="formal">Formal</SelectItem>
-                    <SelectItem value="vintage">Vintage</SelectItem>
-                    <SelectItem value="modern">Modern</SelectItem>
-                    <SelectItem value="bohemian">Bohemian</SelectItem>
-                    <SelectItem value="minimalist">Minimalist</SelectItem>
+                    {[
+                      "Casual",
+                      "Formal",
+                      "Vintage",
+                      "Modern",
+                      "Sportswear",
+                      "Boho",
+                      "Other",
+                    ].map((style) => (
+                      <SelectItem key={style} value={style}>
+                        {style}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="size">Size Range</Label>
+                <Label htmlFor="sizeRange">Size Range</Label>
                 <Select
-                  value={formData.size}
-                  onValueChange={(value: any) =>
-                    setFormData({ ...formData, size: value })
+                  value={formData.sizeRange}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, sizeRange: value })
                   }
                   disabled={isAtLimit}
                 >
@@ -300,20 +349,22 @@ export default function AIPatternPage() {
                     <SelectValue placeholder="Select size range" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="xs-s">XS-S</SelectItem>
-                    <SelectItem value="m-l">M-L</SelectItem>
-                    <SelectItem value="xl-xxl">XL-XXL</SelectItem>
-                    <SelectItem value="all-sizes">All Sizes</SelectItem>
+                    {["XS-S", "M-L", "XL-XXL", "All sizes", "Custom"].map(
+                      (size) => (
+                        <SelectItem key={size} value={size}>
+                          {size}
+                        </SelectItem>
+                      )
+                    )}
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="fabric">Fabric Type</Label>
+                <Label htmlFor="fabricType">Fabric Type</Label>
                 <Select
-                  value={formData.fabric}
-                  onValueChange={(value: any) =>
-                    setFormData({ ...formData, fabric: value })
+                  value={formData.fabricType}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, fabricType: value })
                   }
                   disabled={isAtLimit}
                 >
@@ -321,49 +372,57 @@ export default function AIPatternPage() {
                     <SelectValue placeholder="Select fabric" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="cotton">Cotton</SelectItem>
-                    <SelectItem value="silk">Silk</SelectItem>
-                    <SelectItem value="wool">Wool</SelectItem>
-                    <SelectItem value="linen">Linen</SelectItem>
-                    <SelectItem value="polyester">Polyester</SelectItem>
-                    <SelectItem value="chiffon">Chiffon</SelectItem>
+                    {[
+                      "Cotton",
+                      "Silk",
+                      "Wool",
+                      "Linen",
+                      "Denim",
+                      "Satin",
+                      "Leather",
+                      "Knit",
+                      "Other",
+                    ].map((fabric) => (
+                      <SelectItem key={fabric} value={fabric}>
+                        {fabric}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="occasion">Occasion</Label>
                 <Input
                   id="occasion"
                   placeholder="e.g., wedding, office, casual wear"
                   value={formData.occasion}
-                  onChange={(e: any) =>
+                  onChange={(e) =>
                     setFormData({ ...formData, occasion: e.target.value })
                   }
                   disabled={isAtLimit}
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="description">Additional Details</Label>
                 <Textarea
                   id="description"
                   placeholder="Describe any specific features, colors, or design elements..."
                   value={formData.description}
-                  onChange={(e: any) =>
+                  onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
                   rows={3}
                   disabled={isAtLimit}
                 />
               </div>
-
               <Button
-                onClick={generatePattern}
+                onClick={handleCreate}
                 disabled={
                   isGenerating ||
                   !formData.garmentType ||
                   !formData.style ||
+                  !formData.sizeRange ||
+                  !formData.fabricType ||
                   isAtLimit
                 }
                 className="w-full"
@@ -389,7 +448,7 @@ export default function AIPatternPage() {
           </Card>
         </div>
 
-        {/* Generated Patterns */}
+        {/* Generated Patterns (User's Patterns) */}
         <div className="lg:col-span-2">
           <div className="space-y-6">
             {isGenerating && (
@@ -419,21 +478,23 @@ export default function AIPatternPage() {
               />
             )}
 
-            {generatedPatterns.map((pattern) => (
-              <Card key={pattern.id}>
+            {userPatterns.map((pattern) => (
+              <Card key={pattern._id}>
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
                       <CardTitle>{pattern.name}</CardTitle>
-                      <CardDescription>{pattern.description}</CardDescription>
+                      <CardDescription>
+                        {pattern.description || "No description provided"}
+                      </CardDescription>
                     </div>
                     <div className="flex gap-2">
                       <Badge>{pattern.style}</Badge>
-                      <Badge className="border border-gray-300 py-2 px-6 rounded-md">{pattern.difficulty}</Badge>
+                      <Badge className="border border-gray-300 py-2 px-6 rounded-md">
+                        {pattern.difficulty || "Not specified"}
+                      </Badge>
                       {currentPlan === "free" && (
-                        <Badge
-                          className="border border-gray-300 py-2 px-6 rounded-md text-orange-600 border-orange-600"
-                        >
+                        <Badge className="border py-2 px-6 rounded-md text-orange-600 border-orange-600">
                           Watermarked
                         </Badge>
                       )}
@@ -444,7 +505,10 @@ export default function AIPatternPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="relative">
                       <img
-                        src={pattern.imageUrl || "/placeholder.svg"}
+                        src={
+                          pattern.image_urls[0] ||
+                          "/placeholder.svg?height=300&width=400"
+                        }
                         alt={pattern.name}
                         className="w-full h-48 object-cover rounded-lg bg-gray-100"
                       />
@@ -472,7 +536,6 @@ export default function AIPatternPage() {
                       </div>
                     </div>
                   </div>
-
                   <div>
                     <h4 className="font-semibold mb-2">Instructions:</h4>
                     <ol className="text-sm space-y-1">
@@ -486,11 +549,30 @@ export default function AIPatternPage() {
                       ))}
                     </ol>
                   </div>
-
                   <div className="flex gap-2 pt-4">
-                    <Button>
-                      <FaSave className="h-4 w-4 mr-2" />
-                      Save Pattern
+                    <Button
+                      onClick={() =>
+                        handleEdit({
+                          _id: pattern._id,
+                          name: pattern.name,
+                          description: pattern.description || "",
+                          garmentType: pattern.garmentType,
+                          style: pattern.style,
+                          sizeRange: pattern.sizeRange,
+                          fabricType: pattern.fabricType,
+                          occasion: pattern.occasion || "",
+                        })
+                      }
+                    >
+                      <FaEdit className="h-4 w-4 mr-2" />
+                      Edit Pattern
+                    </Button>
+                    <Button
+                      onClick={() => handleDelete(pattern._id)}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      <FaTrash className="h-4 w-4 mr-2" />
+                      Move to Public
                     </Button>
                     <Button className="border border-gray-300 py-2 px-6 rounded-md">
                       <FaDownload className="h-4 w-4 mr-2" />
@@ -504,25 +586,209 @@ export default function AIPatternPage() {
               </Card>
             ))}
 
-            {generatedPatterns.length === 0 && !isGenerating && !isAtLimit && (
-              <Card>
-                <CardContent className="flex items-center justify-center py-12">
-                  <div className="text-center">
-                    <FaImage className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">
-                      No Patterns Generated Yet
-                    </h3>
-                    <p className="text-gray-600">
-                      Fill out the form on the left to generate your first AI
-                      pattern!
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {userPatterns.length === 0 &&
+              !loading &&
+              !isGenerating &&
+              !isAtLimit && (
+                <Card>
+                  <CardContent className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <FaImage className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">
+                        No Patterns Generated Yet
+                      </h3>
+                      <p className="text-gray-600">
+                        Fill out the form on the left to generate your first AI
+                        pattern!
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
           </div>
         </div>
       </div>
+
+      {/* Edit Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Edit Pattern"
+        description="Update the pattern details below."
+      >
+        {editPattern && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Pattern Name</Label>
+              <Input
+                id="edit-name"
+                value={editPattern.name}
+                onChange={(e) =>
+                  setEditPattern({ ...editPattern, name: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editPattern.description}
+                onChange={(e) =>
+                  setEditPattern({
+                    ...editPattern,
+                    description: e.target.value,
+                  })
+                }
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-garmentType">Garment Type</Label>
+              <Select
+                value={editPattern.garmentType}
+                onValueChange={(value) =>
+                  setEditPattern({ ...editPattern, garmentType: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select garment type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {["Dress", "Blouse", "Skirt", "Pants", "Jacket", "Other"].map(
+                    (type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    )
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-style">Style</Label>
+              <Select
+                value={editPattern.style}
+                onValueChange={(value) =>
+                  setEditPattern({ ...editPattern, style: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select style" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[
+                    "Casual",
+                    "Formal",
+                    "Vintage",
+                    "Modern",
+                    "Sportswear",
+                    "Boho",
+                    "Other",
+                  ].map((style) => (
+                    <SelectItem key={style} value={style}>
+                      {style}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-sizeRange">Size Range</Label>
+              <Select
+                value={editPattern.sizeRange}
+                onValueChange={(value) =>
+                  setEditPattern({ ...editPattern, sizeRange: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select size range" />
+                </SelectTrigger>
+                <SelectContent>
+                  {["XS-S", "M-L", "XL-XXL", "All sizes", "Custom"].map(
+                    (size) => (
+                      <SelectItem key={size} value={size}>
+                        {size}
+                      </SelectItem>
+                    )
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-fabricType">Fabric Type</Label>
+              <Select
+                value={editPattern.fabricType}
+                onValueChange={(value) =>
+                  setEditPattern({ ...editPattern, fabricType: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select fabric" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[
+                    "Cotton",
+                    "Silk",
+                    "Wool",
+                    "Linen",
+                    "Denim",
+                    "Satin",
+                    "Leather",
+                    "Knit",
+                    "Other",
+                  ].map((fabric) => (
+                    <SelectItem key={fabric} value={fabric}>
+                      {fabric}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-occasion">Occasion</Label>
+              <Input
+                id="edit-occasion"
+                value={editPattern.occasion}
+                onChange={(e) =>
+                  setEditPattern({ ...editPattern, occasion: e.target.value })
+                }
+              />
+            </div>
+          </div>
+        )}
+        <div className="flex justify-end gap-2">
+          <Button
+            onClick={() => setIsEditModalOpen(false)}
+            className="border border-gray-300"
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleUpdate}>Save Changes</Button>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Confirm Move to Public"
+        description="Are you sure you want to move this pattern to the public library? It will be accessible to all users and you will lose edit permissions."
+      >
+        <div className="flex justify-end gap-2">
+          <Button
+            onClick={() => setIsDeleteModalOpen(false)}
+            className="border border-gray-300"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmDelete}
+            className="bg-red-600 hover:bg-red-700"
+          >
+            Move to Public
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }
