@@ -49,10 +49,8 @@ const Clients: React.FC = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   useEffect(() => {
-    if (!clients.length && !isLoading && !error) {
       getAllClients();
-    }
-  }, [clients.length, isLoading, error, getAllClients]);
+  }, []);
 
   const filteredClients = clients.filter(
     (client) =>
@@ -68,7 +66,7 @@ const Clients: React.FC = () => {
     setSelectedClient(null);
   };
 
-  if (isLoading && !clients.length) {
+  if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 p-4 min-h-screen">
         <div className="flex flex-col items-center space-y-4">
