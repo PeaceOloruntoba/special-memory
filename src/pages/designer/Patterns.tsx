@@ -1,6 +1,3 @@
-"use client";
-
-import type React from "react";
 import { useState, useRef, useEffect } from "react";
 import {
   Card,
@@ -12,6 +9,14 @@ import {
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Label from "../../components/ui/Label";
+import Textarea from "../../components/ui/Textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/Select";
 import {
   FaPalette,
   FaBrush,
@@ -23,6 +28,18 @@ import {
   FaRedo,
   FaTrashAlt,
 } from "react-icons/fa";
+import { usePatternStore } from "../../store/usePatternStore";
+import Modal from "../../components/ui/Modal";
+
+interface FormData {
+  garmentType: string;
+  style: string;
+  sizeRange: string;
+  fabricType: string;
+  occasion: string;
+  description: string;
+  name: string;
+}
 
 export default function PatternDesignerPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -32,10 +49,33 @@ export default function PatternDesignerPage() {
   >("brush");
   const [brushSize, setBrushSize] = useState(5);
   const [color, setColor] = useState("#000000");
-  const [patternName, setPatternName] = useState("");
+  const [formData, setFormData] = useState<FormData>({
+    garmentType: "Other",
+    style: "Other",
+    sizeRange: "Custom",
+    fabricType: "Other",
+    occasion: "",
+    description: "",
+    name: "",
+  });
+  const [undoStack, setUndoStack] = useState<string[]>([]);
+  const [redoStack, setRedoStack] = useState<string[]>([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editPattern, setEditPattern] = useState<FormData | null>(null);
+  const [editPatternId, setEditPatternId] = useState<string | null>(null);
+  const {
+    userPatterns,
+    loading,
+    error,
+    createPattern,
+    updatePattern,
+    fetchUserPatterns,
+  } = usePatternStore();
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    fetchUserPatterns();
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
@@ -46,7 +86,17 @@ export default function PatternDesignerPage() {
 
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Save initial canvas state
+    setUndoStack([canvas.toDataURL()]);
   }, []);
+
+  const saveCanvasState = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    setUndoStack((prev) => [...prev, canvas.toDataURL()]);
+    setRedoStack([]); // Clear redo stack on new action
+  };
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -87,6 +137,8 @@ export default function PatternDesignerPage() {
     } else if (tool === "eraser") {
       ctx.globalCompositeOperation = "destination-out";
       ctx.strokeStyle = "white";
+    } else {
+      return; // Add line/rectangle/circle logic if needed
     }
 
     ctx.lineTo(x, y);
@@ -96,6 +148,9 @@ export default function PatternDesignerPage() {
   };
 
   const stopDrawing = () => {
+    if (isDrawing) {
+      saveCanvasState();
+    }
     setIsDrawing(false);
   };
 
@@ -108,16 +163,121 @@ export default function PatternDesignerPage() {
 
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    saveCanvasState();
   };
 
-  const savePattern = () => {
+  const undo = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const link = document.createElement("a");
-    link.download = `${patternName || "pattern"}.png`;
-    link.href = canvas.toDataURL();
-    link.click();
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    if (undoStack.length <= 1) return;
+
+    const currentState = canvas.toDataURL();
+    setRedoStack((prev) => [currentState, ...prev]);
+    const prevState = undoStack[undoStack.length - 2];
+    setUndoStack((prev) => prev.slice(0, -1));
+
+    const img = new Image();
+    img.src = prevState;
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+    };
+  };
+
+  const redo = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    if (redoStack.length === 0) return;
+
+    const nextState = redoStack[0];
+    setRedoStack((prev) => prev.slice(1));
+    setUndoStack((prev) => [...prev, canvas.toDataURL()]);
+
+    const img = new Image();
+    img.src = nextState;
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+    };
+  };
+
+  const savePattern = () => {
+    setFormData((prev) => ({
+      ...prev,
+      name: formData.name || "Custom Pattern",
+    }));
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCreate = async () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const base64Image = canvas.toDataURL("image/png").split(",")[1]; // Base64 without prefix
+
+    try {
+      await createPattern(
+        {
+          name: formData.name || "Custom Pattern",
+          description: formData.description,
+          garmentType: formData.garmentType,
+          style: formData.style,
+          sizeRange: formData.sizeRange,
+          fabricType: formData.fabricType,
+          occasion: formData.occasion,
+          additionalDetails: formData.description,
+        },
+        base64Image,
+        false
+      );
+      setIsCreateModalOpen(false);
+      setFormData({
+        garmentType: "Other",
+        style: "Other",
+        sizeRange: "Custom",
+        fabricType: "Other",
+        occasion: "",
+        description: "",
+        name: "",
+      });
+      clearCanvas();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleEdit = (pattern: FormData & { _id: string }) => {
+    setEditPattern({
+      name: pattern.name,
+      description: pattern.description || "",
+      garmentType: pattern.garmentType,
+      style: pattern.style,
+      sizeRange: pattern.sizeRange,
+      fabricType: pattern.fabricType,
+      occasion: pattern.occasion || "",
+    });
+    setEditPatternId(pattern._id);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!editPattern || !editPatternId) return;
+    try {
+      await updatePattern(editPatternId, editPattern);
+      setIsEditModalOpen(false);
+      setEditPattern(null);
+      setEditPatternId(null);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -130,6 +290,15 @@ export default function PatternDesignerPage() {
           </p>
         </div>
       </div>
+
+      {/* Error Display */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <p className="text-red-600">{error}</p>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
         {/* Tools Panel */}
@@ -149,8 +318,10 @@ export default function PatternDesignerPage() {
                   id="patternName"
                   className="p-2 border border-gray-300 rounded-md text-black/80"
                   placeholder="Enter pattern name"
-                  value={patternName}
-                  onChange={(e: any) => setPatternName(e.target.value)}
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                 />
               </div>
 
@@ -211,9 +382,7 @@ export default function PatternDesignerPage() {
                   min={1}
                   max={50}
                   value={brushSize}
-                  onChange={(e: any) =>
-                    setBrushSize(parseInt(e.target.value) || 1)
-                  }
+                  onChange={(e) => setBrushSize(parseInt(e.target.value) || 1)}
                 />
               </div>
 
@@ -225,14 +394,14 @@ export default function PatternDesignerPage() {
                     type="color"
                     id="color"
                     value={color}
-                    onChange={(e: any) => setColor(e.target.value)}
+                    onChange={(e) => setColor(e.target.value)}
                     className="w-10 h-10 rounded cursor-pointer"
                   />
                   <Input
                     value={color}
-                    onChange={(e: any) => setColor(e.target.value)}
+                    onChange={(e) => setColor(e.target.value)}
                     placeholder="#000000"
-                    className="p- rounded-md text-black/80"
+                    className="p-2 rounded-md text-black/80"
                   />
                 </div>
               </div>
@@ -300,16 +469,23 @@ export default function PatternDesignerPage() {
                   onMouseMove={draw}
                   onMouseUp={stopDrawing}
                   onMouseLeave={stopDrawing}
-                  style={{ width: "100%", height: "100%" }}
+                  style={{ width: "100%", height: "600px" }}
                 />
               </div>
-
               <div className="flex justify-between items-center mt-4">
                 <div className="flex gap-2">
-                  <Button className="bg-white text-gray-900 border border-gray-300 hover:bg-gray-100 h-8 w-8 p-0">
+                  <Button
+                    onClick={undo}
+                    className="bg-white text-gray-900 border border-gray-300 hover:bg-gray-100 h-8 w-8 p-0"
+                    disabled={undoStack.length <= 1}
+                  >
                     <FaUndo className="h-4 w-4" />
                   </Button>
-                  <Button className="bg-white text-gray-900 border border-gray-300 hover:bg-gray-100 h-8 w-8 p-0">
+                  <Button
+                    onClick={redo}
+                    className="bg-white text-gray-900 border border-gray-300 hover:bg-gray-100 h-8 w-8 p-0"
+                    disabled={redoStack.length === 0}
+                  >
                     <FaRedo className="h-4 w-4" />
                   </Button>
                 </div>
@@ -320,35 +496,375 @@ export default function PatternDesignerPage() {
         </div>
       </div>
 
-      {/* Pattern Templates */}
+      {/* User Patterns */}
       <Card>
         <CardHeader>
-          <CardTitle>Pattern Templates</CardTitle>
-          <CardDescription>Start with a pre-made template</CardDescription>
+          <CardTitle>Your Patterns</CardTitle>
+          <CardDescription>
+            View and manage your custom patterns
+          </CardDescription>
         </CardHeader>
         <CardContent>
+          {loading && <p className="text-center">Loading...</p>}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {[
-              "Basic Dress",
-              "A-Line Skirt",
-              "Button-Up Shirt",
-              "Blazer",
-              "Pants",
-              "Sleeve",
-            ].map((template) => (
-              <div key={template} className="text-center">
+            {userPatterns.map((pattern) => (
+              <div
+                key={pattern._id}
+                className="text-center group cursor-pointer relative"
+              >
                 <div className="w-full h-24 bg-gray-100 rounded-lg mb-2 flex items-center justify-center">
-                  <FaPalette className="h-8 w-8 text-gray-400" />
+                  {pattern.image_urls[0] ? (
+                    <img
+                      src={pattern.image_urls[0]}
+                      alt={pattern.name}
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                  ) : (
+                    <FaPalette className="h-8 w-8 text-gray-400" />
+                  )}
                 </div>
-                <p className="text-sm font-medium">{template}</p>
-                <Button className="mt-1 bg-white text-gray-900 border border-gray-300 hover:bg-gray-100 h-8 text-sm">
-                  Load
+                <p className="text-sm font-medium truncate">{pattern.name}</p>
+                <Button
+                  onClick={() =>
+                    handleEdit({
+                      _id: pattern._id,
+                      name: pattern.name,
+                      description: pattern.description || "",
+                      garmentType: pattern.garmentType,
+                      style: pattern.style,
+                      sizeRange: pattern.sizeRange,
+                      fabricType: pattern.fabricType,
+                      occasion: pattern.occasion || "",
+                    })
+                  }
+                  className="mt-1 bg-white text-gray-900 border border-gray-300 hover:bg-gray-100 h-8 text-sm"
+                >
+                  Edit
                 </Button>
               </div>
             ))}
+            {userPatterns.length === 0 && !loading && (
+              <p className="text-center col-span-full">
+                No patterns created yet.
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
+
+      {/* Create Pattern Modal */}
+      <Modal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        title="Save Pattern"
+        description="Provide details for your pattern."
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="create-name">Pattern Name</Label>
+            <Input
+              id="create-name"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="create-description">Description</Label>
+            <Textarea
+              id="create-description"
+              value={formData.description}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
+              rows={3}
+              className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="create-garmentType">Garment Type</Label>
+            <Select
+              value={formData.garmentType}
+              onValueChange={(value) =>
+                setFormData({ ...formData, garmentType: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select garment type" />
+              </SelectTrigger>
+              <SelectContent>
+                {["Dress", "Blouse", "Skirt", "Pants", "Jacket", "Other"].map(
+                  (type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  )
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="create-style">Style</Label>
+            <Select
+              value={formData.style}
+              onValueChange={(value) =>
+                setFormData({ ...formData, style: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select style" />
+              </SelectTrigger>
+              <SelectContent>
+                {[
+                  "Casual",
+                  "Formal",
+                  "Vintage",
+                  "Modern",
+                  "Sportswear",
+                  "Boho",
+                  "Other",
+                ].map((style) => (
+                  <SelectItem key={style} value={style}>
+                    {style}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="create-sizeRange">Size Range</Label>
+            <Select
+              value={formData.sizeRange}
+              onValueChange={(value) =>
+                setFormData({ ...formData, sizeRange: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select size range" />
+              </SelectTrigger>
+              <SelectContent>
+                {["XS-S", "M-L", "XL-XXL", "All sizes", "Custom"].map(
+                  (size) => (
+                    <SelectItem key={size} value={size}>
+                      {size}
+                    </SelectItem>
+                  )
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="create-fabricType">Fabric Type</Label>
+            <Select
+              value={formData.fabricType}
+              onValueChange={(value) =>
+                setFormData({ ...formData, fabricType: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select fabric" />
+              </SelectTrigger>
+              <SelectContent>
+                {[
+                  "Cotton",
+                  "Silk",
+                  "Wool",
+                  "Linen",
+                  "Denim",
+                  "Satin",
+                  "Leather",
+                  "Knit",
+                  "Other",
+                ].map((fabric) => (
+                  <SelectItem key={fabric} value={fabric}>
+                    {fabric}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="create-occasion">Occasion</Label>
+            <Input
+              id="create-occasion"
+              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
+              value={formData.occasion}
+              onChange={(e) =>
+                setFormData({ ...formData, occasion: e.target.value })
+              }
+            />
+          </div>
+        </div>
+        <div className="mt-6 flex justify-end gap-2 text-lg font-semibold">
+          <Button
+            onClick={() => setIsCreateModalOpen(false)}
+            className="border border-gray-300 py-2 px-6 rounded-md"
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleCreate} className="bg-black/90 py-2 px-6 rounded-md text-white">Save Pattern</Button>
+        </div>
+      </Modal>
+
+      {/* Edit Pattern Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Edit Pattern"
+        description="Update the pattern details below."
+      >
+        {editPattern && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Pattern Name</Label>
+              <Input
+                id="edit-name"
+                value={editPattern.name}
+                onChange={(e) =>
+                  setEditPattern({ ...editPattern, name: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editPattern.description}
+                onChange={(e) =>
+                  setEditPattern({
+                    ...editPattern,
+                    description: e.target.value,
+                  })
+                }
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-garmentType">Garment Type</Label>
+              <Select
+                value={editPattern.garmentType}
+                onValueChange={(value) =>
+                  setEditPattern({ ...editPattern, garmentType: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select garment type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {["Dress", "Blouse", "Skirt", "Pants", "Jacket", "Other"].map(
+                    (type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    )
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-style">Style</Label>
+              <Select
+                value={editPattern.style}
+                onValueChange={(value) =>
+                  setEditPattern({ ...editPattern, style: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select style" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[
+                    "Casual",
+                    "Formal",
+                    "Vintage",
+                    "Modern",
+                    "Sportswear",
+                    "Boho",
+                    "Other",
+                  ].map((style) => (
+                    <SelectItem key={style} value={style}>
+                      {style}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-sizeRange">Size Range</Label>
+              <Select
+                value={editPattern.sizeRange}
+                onValueChange={(value) =>
+                  setEditPattern({ ...editPattern, sizeRange: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select size range" />
+                </SelectTrigger>
+                <SelectContent>
+                  {["XS-S", "M-L", "XL-XXL", "All sizes", "Custom"].map(
+                    (size) => (
+                      <SelectItem key={size} value={size}>
+                        {size}
+                      </SelectItem>
+                    )
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-fabricType">Fabric Type</Label>
+              <Select
+                value={editPattern.fabricType}
+                onValueChange={(value) =>
+                  setEditPattern({ ...editPattern, fabricType: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select fabric" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[
+                    "Cotton",
+                    "Silk",
+                    "Wool",
+                    "Linen",
+                    "Denim",
+                    "Satin",
+                    "Leather",
+                    "Knit",
+                    "Other",
+                  ].map((fabric) => (
+                    <SelectItem key={fabric} value={fabric}>
+                      {fabric}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-occasion">Occasion</Label>
+              <Input
+                id="edit-occasion"
+                value={editPattern.occasion}
+                onChange={(e) =>
+                  setEditPattern({ ...editPattern, occasion: e.target.value })
+                }
+              />
+            </div>
+          </div>
+        )}
+        <div className="flex justify-end gap-2">
+          <Button
+            onClick={() => setIsEditModalOpen(false)}
+            className="border border-gray-300"
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleUpdate}>Save Changes</Button>
+        </div>
+      </Modal>
     </div>
   );
 }
