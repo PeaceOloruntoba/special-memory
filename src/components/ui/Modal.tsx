@@ -1,4 +1,3 @@
-
 import type { ReactNode } from "react";
 
 interface ModalProps {
@@ -22,7 +21,7 @@ export default function Modal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-lg w-4/5 md:w-2/5 max-h-4/5 p-6 overflow-y-scroll">
+      <div className="bg-white rounded-lg shadow-lg w-2/5 h-3/5 overflow-y-scroll p-6">
         <div className="mb-4">
           <h2 className="text-xl font-bold text-gray-900">{title}</h2>
           {description && (

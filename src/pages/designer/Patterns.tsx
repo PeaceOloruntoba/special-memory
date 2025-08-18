@@ -74,8 +74,8 @@ export default function PatternDesignerPage() {
   } = usePatternStore();
 
   useEffect(() => {
-    const canvas = canvasRef.current;
     fetchUserPatterns();
+    const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
@@ -580,7 +580,6 @@ export default function PatternDesignerPage() {
                 setFormData({ ...formData, description: e.target.value })
               }
               rows={3}
-              className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
             />
           </div>
           <div className="space-y-2">
@@ -689,22 +688,27 @@ export default function PatternDesignerPage() {
             <Label htmlFor="create-occasion">Occasion</Label>
             <Input
               id="create-occasion"
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
               value={formData.occasion}
               onChange={(e) =>
                 setFormData({ ...formData, occasion: e.target.value })
               }
+              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
             />
           </div>
         </div>
-        <div className="mt-6 flex justify-end gap-2 text-lg font-semibold">
+        <div className="flex justify-end gap-2">
           <Button
             onClick={() => setIsCreateModalOpen(false)}
-            className="border border-gray-300 py-2 px-6 rounded-md"
+            className="w-full flex items-center justify-center py-2 rounded-md bg-transparent text-gray-900 border border-gray-300 hover:bg-gray-100"
           >
             Cancel
           </Button>
-          <Button onClick={handleCreate} className="bg-black/90 py-2 px-6 rounded-md text-white">Save Pattern</Button>
+          <Button
+            onClick={handleCreate}
+            className="w-full flex items-center justify-center py-2 rounded-md bg-black text-white hover:bg-gray-800"
+          >
+            Save Pattern
+          </Button>
         </div>
       </Modal>
 
@@ -725,6 +729,7 @@ export default function PatternDesignerPage() {
                 onChange={(e) =>
                   setEditPattern({ ...editPattern, name: e.target.value })
                 }
+                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
               />
             </div>
             <div className="space-y-2">
@@ -851,6 +856,7 @@ export default function PatternDesignerPage() {
                 onChange={(e) =>
                   setEditPattern({ ...editPattern, occasion: e.target.value })
                 }
+                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-950"
               />
             </div>
           </div>
@@ -858,11 +864,16 @@ export default function PatternDesignerPage() {
         <div className="flex justify-end gap-2">
           <Button
             onClick={() => setIsEditModalOpen(false)}
-            className="border border-gray-300"
+            className="w-full flex items-center justify-center py-2 rounded-md bg-transparent text-gray-900 border border-gray-300 hover:bg-gray-100"
           >
             Cancel
           </Button>
-          <Button onClick={handleUpdate}>Save Changes</Button>
+          <Button
+            onClick={handleUpdate}
+            className="w-full flex items-center justify-center py-2 rounded-md bg-black text-white hover:bg-gray-800"
+          >
+            Save Changes
+          </Button>
         </div>
       </Modal>
     </div>

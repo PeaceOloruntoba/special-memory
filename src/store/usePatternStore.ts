@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import api from "../utils/api";
+import api from "../utils/api"; // Your axios instance
 
 interface Pattern {
   _id: string;
@@ -54,7 +54,7 @@ export const usePatternStore = create<PatternStore>()(
       fetchUserPatterns: async () => {
         set({ loading: true, error: null });
         try {
-          const { data } = await api.get("api/v1/patterns");
+          const { data } = await api.get("/api/v1/patterns");
           set({ userPatterns: data.data.patterns });
         } catch (err: any) {
           set({ error: err.message });
