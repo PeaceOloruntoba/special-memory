@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import api from "../utils/api"; // Your axios instance
+import api from "../utils/api";
 import { toast } from "sonner";
 
 interface Pattern {
@@ -16,6 +16,7 @@ interface Pattern {
   additionalDetails?: string;
   image_urls: string[];
   isAiGenerated: boolean;
+  isWatermarked: boolean;
   difficulty?: string;
   instructions: string[];
   materials: string[];
@@ -42,6 +43,7 @@ interface PatternStore {
   ) => Promise<void>;
   deletePattern: (patternId: string) => Promise<void>;
   getSinglePattern: (patternId: string) => Promise<Pattern | undefined>;
+  movePatternToPublic: (patternId: string) => Promise<void>;
 }
 
 export const usePatternStore = create<PatternStore>()(
@@ -87,7 +89,7 @@ export const usePatternStore = create<PatternStore>()(
           await api.post("api/v1/patterns", payload);
           await get().fetchUserPatterns();
           await get().fetchPublicPatterns();
-          toast.success("Pattern created successfully")
+          toast.success("Pattern created successfully");
         } catch (err: any) {
           set({ error: err.message });
         } finally {
@@ -102,6 +104,7 @@ export const usePatternStore = create<PatternStore>()(
           await api.patch(`api/v1/patterns/${patternId}`, payload);
           await get().fetchUserPatterns();
           await get().fetchPublicPatterns();
+          toast.success("Pattern updated successfully");
         } catch (err: any) {
           set({ error: err.message });
         } finally {
@@ -115,6 +118,7 @@ export const usePatternStore = create<PatternStore>()(
           await api.delete(`api/v1/patterns/${patternId}`);
           await get().fetchUserPatterns();
           await get().fetchPublicPatterns();
+          toast.success("Pattern deleted successfully");
         } catch (err: any) {
           set({ error: err.message });
         } finally {
@@ -130,6 +134,21 @@ export const usePatternStore = create<PatternStore>()(
         } catch (err: any) {
           set({ error: err.message });
           return undefined;
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      movePatternToPublic: async (patternId) => {
+        set({ loading: true, error: null });
+        try {
+          await api.patch(`api/v1/patterns/public/${patternId}`);
+          await get().fetchUserPatterns();
+          await get().fetchPublicPatterns();
+          toast.success("Pattern moved to public library successfully!");
+        } catch (err: any) {
+          set({ error: err.message });
+          toast.error("Failed to move pattern to public library.");
         } finally {
           set({ loading: false });
         }

@@ -23,12 +23,10 @@ import {
   FaMagic,
   FaImage,
   FaPalette,
-  FaLock,
   FaEdit,
   FaTrash,
 } from "react-icons/fa";
 import { FaHandSparkles } from "react-icons/fa6";
-import { PlanRestrictions } from "../../components/PlanRestrictions";
 import { usePatternStore } from "../../store/usePatternStore";
 import Modal from "../../components/ui/Modal";
 
@@ -53,10 +51,10 @@ export default function AIPatternPage() {
     createPattern,
     updatePattern,
     deletePattern,
+    movePatternToPublic,
   } = usePatternStore();
+
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generationsUsed, setGenerationsUsed] = useState(3); // Simulated; replace with backend tracking if available
-  const [currentPlan] = useState<"free" | "premium" | "enterprise">("free"); // Simulated
   const [formData, setFormData] = useState<FormData>({
     garmentType: "",
     style: "",
@@ -69,8 +67,8 @@ export default function AIPatternPage() {
   const [editPattern, setEditPattern] = useState<FormData | null>(null);
   const [editPatternId, setEditPatternId] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [deletePatternId, setDeletePatternId] = useState<string | null>(null);
+  const [isPublicModalOpen, setIsPublicModalOpen] = useState(false);
+  const [publicPatternId, setPublicPatternId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPublicPatterns();
@@ -78,25 +76,18 @@ export default function AIPatternPage() {
   }, [fetchPublicPatterns, fetchUserPatterns]);
 
   const handleCreate = async () => {
-    if (currentPlan === "free" && generationsUsed >= 5) return;
-
     setIsGenerating(true);
     try {
-      await createPattern(
-        {
-          name: formData.name || `${formData.style} ${formData.garmentType}`,
-          description: formData.description,
-          garmentType: formData.garmentType,
-          style: formData.style,
-          sizeRange: formData.sizeRange,
-          fabricType: formData.fabricType,
-          occasion: formData.occasion,
-          additionalDetails: formData.description,
-        },
-        null,
-        true
-      );
-      setGenerationsUsed((prev) => prev + 1);
+      await createPattern({
+        name: formData.name || `${formData.style} ${formData.garmentType}`,
+        description: formData.description,
+        garmentType: formData.garmentType,
+        style: formData.style,
+        sizeRange: formData.sizeRange,
+        fabricType: formData.fabricType,
+        occasion: formData.occasion,
+        additionalDetails: formData.description,
+      });
       setFormData({
         garmentType: "",
         style: "",
@@ -139,49 +130,33 @@ export default function AIPatternPage() {
     }
   };
 
-  const handleDelete = (patternId: string) => {
-    setDeletePatternId(patternId);
-    setIsDeleteModalOpen(true);
+  const handleMoveToPublic = (patternId: string) => {
+    setPublicPatternId(patternId);
+    setIsPublicModalOpen(true);
   };
 
-  const confirmDelete = async () => {
-    if (!deletePatternId) return;
+  const confirmMoveToPublic = async () => {
+    if (!publicPatternId) return;
     try {
-      await deletePattern(deletePatternId);
-      setIsDeleteModalOpen(false);
-      setDeletePatternId(null);
+      await movePatternToPublic(publicPatternId);
+      setIsPublicModalOpen(false);
+      setPublicPatternId(null);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const isAtLimit = currentPlan === "free" && generationsUsed >= 5;
+  const handleDelete = async (patternId: string) => {
+    if (!patternId) return;
+    try {
+      await deletePattern(patternId);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
-      {/* Usage indicator */}
-      {currentPlan === "free" && (
-        <Card className="border-orange-200 bg-orange-50">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-orange-800">
-                  AI Generations Used: {generationsUsed}/5 this month
-                </p>
-                <p className="text-sm text-orange-600">
-                  {5 - generationsUsed} generations remaining on Free plan
-                </p>
-              </div>
-              {generationsUsed >= 4 && (
-                <Button className="bg-orange-600 hover:bg-orange-700">
-                  Upgrade for Unlimited
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Error Display */}
       {error && (
         <Card className="border-red-200 bg-red-50">
@@ -197,11 +172,6 @@ export default function AIPatternPage() {
           <CardTitle className="flex items-center gap-2">
             <FaImage className="h-5 w-5" />
             Public Pattern Library
-            {currentPlan === "free" && (
-              <Badge className="text-orange-600 border-orange-600 border py-2 px-6 rounded-md">
-                Limited on Free
-              </Badge>
-            )}
           </CardTitle>
           <CardDescription>
             Browse and use patterns from the public collection
@@ -276,7 +246,6 @@ export default function AIPatternPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  disabled={isAtLimit}
                 />
               </div>
               <div className="space-y-2">
@@ -286,7 +255,6 @@ export default function AIPatternPage() {
                   onValueChange={(value) =>
                     setFormData({ ...formData, garmentType: value })
                   }
-                  disabled={isAtLimit}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select garment type" />
@@ -314,7 +282,6 @@ export default function AIPatternPage() {
                   onValueChange={(value) =>
                     setFormData({ ...formData, style: value })
                   }
-                  disabled={isAtLimit}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select style" />
@@ -343,7 +310,6 @@ export default function AIPatternPage() {
                   onValueChange={(value) =>
                     setFormData({ ...formData, sizeRange: value })
                   }
-                  disabled={isAtLimit}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select size range" />
@@ -366,7 +332,6 @@ export default function AIPatternPage() {
                   onValueChange={(value) =>
                     setFormData({ ...formData, fabricType: value })
                   }
-                  disabled={isAtLimit}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select fabric" />
@@ -393,13 +358,13 @@ export default function AIPatternPage() {
               <div className="space-y-2">
                 <Label htmlFor="occasion">Occasion</Label>
                 <Input
+                  className="w-full border border-gray-300 p-2 rounded-md"
                   id="occasion"
                   placeholder="e.g., wedding, office, casual wear"
                   value={formData.occasion}
                   onChange={(e) =>
                     setFormData({ ...formData, occasion: e.target.value })
                   }
-                  disabled={isAtLimit}
                 />
               </div>
               <div className="space-y-2">
@@ -412,7 +377,6 @@ export default function AIPatternPage() {
                     setFormData({ ...formData, description: e.target.value })
                   }
                   rows={3}
-                  disabled={isAtLimit}
                 />
               </div>
               <Button
@@ -422,20 +386,14 @@ export default function AIPatternPage() {
                   !formData.garmentType ||
                   !formData.style ||
                   !formData.sizeRange ||
-                  !formData.fabricType ||
-                  isAtLimit
+                  !formData.fabricType
                 }
-                className="w-full"
+                className="w-full flex items-center justify-center py-2 px-6 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {isGenerating ? (
                   <>
                     <FaHandSparkles className="h-4 w-4 mr-2 animate-spin" />
                     Generating Pattern...
-                  </>
-                ) : isAtLimit ? (
-                  <>
-                    <FaLock className="h-4 w-4 mr-2" />
-                    Limit Reached
                   </>
                 ) : (
                   <>
@@ -468,16 +426,6 @@ export default function AIPatternPage() {
               </Card>
             )}
 
-            {isAtLimit && (
-              <PlanRestrictions
-                feature="Unlimited AI Pattern Generation"
-                currentPlan={currentPlan}
-                requiredPlan="premium"
-                description="You've reached your monthly limit of 5 AI pattern generations on the Free plan."
-                upgradeMessage="Upgrade to Premium for unlimited AI pattern generations, plus access to professional templates and advanced design tools."
-              />
-            )}
-
             {userPatterns.map((pattern) => (
               <Card key={pattern._id}>
                 <CardHeader>
@@ -489,12 +437,14 @@ export default function AIPatternPage() {
                       </CardDescription>
                     </div>
                     <div className="flex gap-2">
-                      <Badge>{pattern.style}</Badge>
-                      <Badge className="border border-gray-300 py-2 px-6 rounded-md">
+                      <Badge className="py-1 px-3 bg-gray-200 text-gray-800 rounded-full">
+                        {pattern.style}
+                      </Badge>
+                      <Badge className="py-1 px-3 bg-gray-200 text-gray-800 rounded-full">
                         {pattern.difficulty || "Not specified"}
                       </Badge>
-                      {currentPlan === "free" && (
-                        <Badge className="border py-2 px-6 rounded-md text-orange-600 border-orange-600">
+                      {pattern.isWatermarked && (
+                        <Badge className="py-1 px-3 bg-orange-100 text-orange-600 rounded-full">
                           Watermarked
                         </Badge>
                       )}
@@ -512,7 +462,7 @@ export default function AIPatternPage() {
                         alt={pattern.name}
                         className="w-full h-48 object-cover rounded-lg bg-gray-100"
                       />
-                      {currentPlan === "free" && (
+                      {pattern.isWatermarked && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 rounded-lg">
                           <div className="bg-white bg-opacity-90 px-3 py-1 rounded text-sm font-medium">
                             FashionStudio
@@ -549,7 +499,7 @@ export default function AIPatternPage() {
                       ))}
                     </ol>
                   </div>
-                  <div className="flex gap-2 pt-4">
+                  <div className="flex flex-wrap gap-2 pt-4">
                     <Button
                       onClick={() =>
                         handleEdit({
@@ -563,21 +513,29 @@ export default function AIPatternPage() {
                           occasion: pattern.occasion || "",
                         })
                       }
+                      className="py-2 px-6 flex items-center justify-center text-nowrap bg-blue-500 text-white rounded-md hover:bg-blue-600"
                     >
                       <FaEdit className="h-4 w-4 mr-2" />
                       Edit Pattern
                     </Button>
                     <Button
+                      onClick={() => handleMoveToPublic(pattern._id)}
+                      className="py-2 px-6 flex items-center justify-center text-nowrap bg-purple-600 text-white rounded-md hover:bg-purple-700"
+                    >
+                      <FaImage className="h-4 w-4 mr-2" />
+                      Make Public
+                    </Button>
+                    <Button
                       onClick={() => handleDelete(pattern._id)}
-                      className="bg-red-600 hover:bg-red-700"
+                      className="py-2 px-6 flex items-center justify-center text-nowrap bg-red-600 text-white rounded-md hover:bg-red-700"
                     >
                       <FaTrash className="h-4 w-4 mr-2" />
-                      Move to Public
+                      Delete
                     </Button>
-                    <Button className="border border-gray-300 py-2 px-6 rounded-md">
+                    <Button className="py-2 px-6 flex items-center justify-center text-nowrap border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100">
                       <FaDownload className="h-4 w-4 mr-2" />
                       Download PDF
-                      {currentPlan === "free" && (
+                      {pattern.isWatermarked && (
                         <span className="ml-1 text-xs">(Watermarked)</span>
                       )}
                     </Button>
@@ -586,25 +544,22 @@ export default function AIPatternPage() {
               </Card>
             ))}
 
-            {userPatterns.length === 0 &&
-              !loading &&
-              !isGenerating &&
-              !isAtLimit && (
-                <Card>
-                  <CardContent className="flex items-center justify-center py-12">
-                    <div className="text-center">
-                      <FaImage className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">
-                        No Patterns Generated Yet
-                      </h3>
-                      <p className="text-gray-600">
-                        Fill out the form on the left to generate your first AI
-                        pattern!
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+            {userPatterns.length === 0 && !loading && !isGenerating && (
+              <Card>
+                <CardContent className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <FaImage className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">
+                      No Patterns Generated Yet
+                    </h3>
+                    <p className="text-gray-600">
+                      Fill out the form on the left to generate your first AI
+                      pattern!
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>
@@ -756,36 +711,41 @@ export default function AIPatternPage() {
             </div>
           </div>
         )}
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2 mt-4">
           <Button
             onClick={() => setIsEditModalOpen(false)}
-            className="border border-gray-300"
+            className="py-2 px-6 flex items-center justify-center text-nowrap border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100"
           >
             Cancel
           </Button>
-          <Button onClick={handleUpdate}>Save Changes</Button>
+          <Button
+            onClick={handleUpdate}
+            className="py-2 px-6 flex items-center justify-center text-nowrap bg-purple-600 text-white rounded-md hover:bg-purple-700"
+          >
+            Save Changes
+          </Button>
         </div>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
+      {/* Move to Public Confirmation Modal */}
       <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
+        isOpen={isPublicModalOpen}
+        onClose={() => setIsPublicModalOpen(false)}
         title="Confirm Move to Public"
-        description="Are you sure you want to move this pattern to the public library? It will be accessible to all users and you will lose edit permissions."
+        description="Are you sure you want to move this pattern to the public library? It will be accessible to all users."
       >
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2 mt-4">
           <Button
-            onClick={() => setIsDeleteModalOpen(false)}
-            className="border border-gray-300"
+            onClick={() => setIsPublicModalOpen(false)}
+            className="py-2 px-6 flex items-center justify-center text-nowrap border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100"
           >
             Cancel
           </Button>
           <Button
-            onClick={confirmDelete}
-            className="bg-red-600 hover:bg-red-700"
+            onClick={confirmMoveToPublic}
+            className="py-2 px-6 flex items-center justify-center text-nowrap bg-purple-600 text-white rounded-md hover:bg-purple-700"
           >
-            Move to Public
+            Make Public
           </Button>
         </div>
       </Modal>
