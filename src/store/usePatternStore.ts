@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import api from "../utils/api"; // Your axios instance
+import { toast } from "sonner";
 
 interface Pattern {
   _id: string;
@@ -86,6 +87,7 @@ export const usePatternStore = create<PatternStore>()(
           await api.post("api/v1/patterns", payload);
           await get().fetchUserPatterns();
           await get().fetchPublicPatterns();
+          toast.success("Pattern created successfully")
         } catch (err: any) {
           set({ error: err.message });
         } finally {

@@ -91,6 +91,25 @@ export default function PatternDesignerPage() {
     setUndoStack([canvas.toDataURL()]);
   }, []);
 
+  const getCanvasCoordinates = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
+  ) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+
+    return { x, y };
+  };
+
   const saveCanvasState = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -98,34 +117,23 @@ export default function PatternDesignerPage() {
     setRedoStack([]); // Clear redo stack on new action
   };
 
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
+  const startDrawing = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
+  ) => {
+    const { x, y } = getCanvasCoordinates(e);
     setIsDrawing(true);
-
-    const ctx = canvas.getContext("2d");
+    const ctx = canvasRef.current?.getContext("2d");
     if (!ctx) return;
-
     ctx.beginPath();
     ctx.moveTo(x, y);
   };
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const draw = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
+  ) => {
     if (!isDrawing) return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const ctx = canvas.getContext("2d");
+    const { x, y } = getCanvasCoordinates(e);
+    const ctx = canvasRef.current?.getContext("2d");
     if (!ctx) return;
 
     ctx.lineWidth = brushSize;
@@ -221,7 +229,7 @@ export default function PatternDesignerPage() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const base64Image = canvas.toDataURL("image/png").split(",")[1]; // Base64 without prefix
+    const base64Image = canvas.toDataURL("image/png");
 
     try {
       await createPattern(
@@ -469,6 +477,9 @@ export default function PatternDesignerPage() {
                   onMouseMove={draw}
                   onMouseUp={stopDrawing}
                   onMouseLeave={stopDrawing}
+                  onTouchStart={startDrawing}
+                  onTouchMove={draw}
+                  onTouchEnd={stopDrawing}
                   style={{ width: "100%", height: "600px" }}
                 />
               </div>
@@ -537,7 +548,7 @@ export default function PatternDesignerPage() {
                       occasion: pattern.occasion || "",
                     })
                   }
-                  className="mt-1 bg-white text-gray-900 border border-gray-300 hover:bg-gray-100 h-8 text-sm"
+                  className="mt-1 bg-white text-gray-900 border border-gray-300 hover:bg-gray-100 h-8 text-sm px-8 rounded-md"
                 >
                   Edit
                 </Button>
