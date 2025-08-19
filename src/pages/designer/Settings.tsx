@@ -426,7 +426,7 @@ export default function SettingsPage() {
   return (
     <div className="p-6 space-y-6">
       {showCheckoutModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed h-screen w-screen inset-0 bg-black/70 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h2 className="text-xl font-semibold mb-4">
               {checkoutAction === "subscribe"

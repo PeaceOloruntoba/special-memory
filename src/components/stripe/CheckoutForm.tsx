@@ -91,7 +91,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
       <div className="flex gap-4">
         <Button
           type="submit"
-          className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md"
+          className="w-full py-2 text-nowrap px-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md"
           disabled={!stripe || loading}
         >
           {loading ? (
