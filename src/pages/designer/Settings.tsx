@@ -33,6 +33,7 @@ import Spinner from "../../components/ui/Spinner";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import CheckoutForm from "../../components/stripe/CheckoutForm";
+import { toTitleCase } from "../../lib/utils";
 
 // Initialize Stripe with your publishable key
 const stripePromise = loadStripe("pk_test_your_publishable_key"); // Replace with your actual Stripe publishable key
@@ -183,6 +184,7 @@ export default function SettingsPage() {
     fetchSubscriptionDetails,
     subscribePlan,
     cancelSubscription,
+    updatePaymentMethod,
     deleteAccount,
     toggle2FA,
     logoutAll,
@@ -251,6 +253,9 @@ export default function SettingsPage() {
 
   const [selectedPlan, setSelectedPlan] = useState("");
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [checkoutAction, setCheckoutAction] = useState<
+    "subscribe" | "updatePaymentMethod"
+  >("subscribe");
 
   useEffect(() => {
     fetchSettings();
@@ -339,7 +344,6 @@ export default function SettingsPage() {
       return;
     }
 
-    // If user selects 'free' plan, no payment method is needed
     if (selectedPlan === "free") {
       try {
         await subscribePlan(selectedPlan);
@@ -350,42 +354,31 @@ export default function SettingsPage() {
       return;
     }
 
-    // For paid plans, check if a payment method exists
-    if (!subscriptionDetails?.paymentMethod) {
-      setShowCheckoutModal(true); // Show modal to collect payment method
-    } else {
-      // Use existing payment method
-      try {
-        await subscribePlan(
-          selectedPlan,
-          subscriptionDetails.paymentMethod.last4
-        );
+    setCheckoutAction("subscribe");
+    setShowCheckoutModal(true);
+  };
+
+  const handlePaymentMethodCreated = async (paymentMethodId: string) => {
+    try {
+      if (checkoutAction === "subscribe") {
+        await subscribePlan(selectedPlan, paymentMethodId);
         setSelectedPlan("");
-      } catch (error) {
-        // Error is handled in the store
+      } else {
+        await updatePaymentMethod(paymentMethodId);
       }
+      setShowCheckoutModal(false);
+    } catch (error) {
+      setShowCheckoutModal(false);
     }
   };
 
-  // Callback from CheckoutForm after successful payment method creation
-  const handlePaymentMethodCreated = async (paymentMethodId: string) => {
-    try {
-      await subscribePlan(selectedPlan, paymentMethodId);
-      setShowCheckoutModal(false);
-      setSelectedPlan("");
-      toast.success("Plan updated successfully");
-    } catch (error) {
-      // Error is handled in the store, but we can close the modal
-      setShowCheckoutModal(false);
-    }
+  const handleUpdatePaymentMethod = async () => {
+    setCheckoutAction("updatePaymentMethod");
+    setShowCheckoutModal(true);
   };
 
   const handleCancelSubscription = async () => {
     await cancelSubscription();
-  };
-
-  const handleUpdatePaymentMethod = async () => {
-    setShowCheckoutModal(true); // Open modal to update payment method
   };
 
   const handleToggle2FA = async (enable: boolean) => {
@@ -403,7 +396,7 @@ export default function SettingsPage() {
       )
     ) {
       await deleteAccount();
-      window.location.href = "/login";
+      window.location.href = "/";
     }
   };
 
@@ -432,27 +425,22 @@ export default function SettingsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Checkout Modal */}
       {showCheckoutModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h2 className="text-xl font-semibold mb-4">
-              {subscriptionDetails?.paymentMethod
-                ? "Update Payment Method"
-                : "Add Payment Method"}
+              {checkoutAction === "subscribe"
+                ? `Subscribe to ${toTitleCase(selectedPlan)} Plan`
+                : "Update Payment Method"}
             </h2>
             <Elements stripe={stripePromise}>
               <CheckoutForm
-                plan={selectedPlan}
+                plan={checkoutAction === "subscribe" ? selectedPlan : undefined}
+                action={checkoutAction}
                 onSuccess={handlePaymentMethodCreated}
+                onCancel={() => setShowCheckoutModal(false)}
               />
             </Elements>
-            <Button
-              onClick={() => setShowCheckoutModal(false)}
-              className="mt-4 w-full border border-gray-300 text-gray-700 hover:bg-gray-100 py-2 px-6 rounded-md"
-            >
-              Cancel
-            </Button>
           </div>
         </div>
       )}
@@ -942,7 +930,11 @@ export default function SettingsPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-purple-900">
-                    {subscriptionDetails?.planId === "free" ? "$0" : "$49"}
+                    {subscriptionDetails?.planId === "free"
+                      ? "$0"
+                      : subscriptionDetails?.planId === "premium"
+                      ? "$49"
+                      : "$149"}
                   </div>
                   <div className="text-sm text-purple-700">per month</div>
                 </div>

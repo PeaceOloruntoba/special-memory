@@ -6,11 +6,18 @@ import { toast } from "sonner";
 import { toTitleCase } from "../../lib/utils";
 
 interface CheckoutFormProps {
-  plan: string;
-  onSuccess?: (paymentMethodId: string) => void; // Added callback
+  plan?: string;
+  action: "subscribe" | "updatePaymentMethod";
+  onSuccess: (paymentMethodId: string) => void;
+  onCancel: () => void;
 }
 
-const CheckoutForm: React.FC<CheckoutFormProps> = ({ plan, onSuccess }) => {
+const CheckoutForm: React.FC<CheckoutFormProps> = ({
+  plan,
+  action,
+  onSuccess,
+  onCancel,
+}) => {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -41,8 +48,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ plan, onSuccess }) => {
         return;
       }
 
-      // Call onSuccess with the payment method ID
-      if (paymentMethod?.id && onSuccess) {
+      if (paymentMethod?.id) {
         onSuccess(paymentMethod.id);
       }
 
@@ -82,17 +88,28 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ plan, onSuccess }) => {
         <div className="text-red-500 text-sm text-center">{errorMessage}</div>
       )}
 
-      <Button
-        type="submit"
-        className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md"
-        disabled={!stripe || loading}
-      >
-        {loading ? (
-          <BiLoaderAlt className="animate-spin mr-2" />
-        ) : (
-          `Confirm Subscription for ${toTitleCase(plan)}`
-        )}
-      </Button>
+      <div className="flex gap-4">
+        <Button
+          type="submit"
+          className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md"
+          disabled={!stripe || loading}
+        >
+          {loading ? (
+            <BiLoaderAlt className="animate-spin mr-2 inline" />
+          ) : action === "subscribe" ? (
+            `Confirm Subscription for ${toTitleCase(plan || "")}`
+          ) : (
+            "Update Payment Method"
+          )}
+        </Button>
+        <Button
+          type="button"
+          onClick={onCancel}
+          className="w-full py-2 border border-gray-300 text-gray-700 hover:bg-gray-100 rounded-md"
+        >
+          Cancel
+        </Button>
+      </div>
     </form>
   );
 };

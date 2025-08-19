@@ -1,4 +1,3 @@
-// src/pages/designer/Pricing.tsx
 import { BiCheck, BiX, BiStar, BiCrown, BiBoltCircle } from "react-icons/bi";
 import {
   Card,
@@ -11,10 +10,14 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import React, { useEffect, useState } from "react";
 import usePricingStore from "../../store/usePricingStore";
-import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { BiLoaderAlt } from "react-icons/bi";
-import Input from "../../components/ui/Input"; // Assuming you have an Input component
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import CheckoutForm from "../../components/stripe/CheckoutForm";
+import { toTitleCase } from "../../lib/utils";
+
+const stripePromise = loadStripe("pk_test_your_publishable_key");
 
 interface Feature {
   name: string;
@@ -150,7 +153,7 @@ const plans: Plan[] = [
       { name: "Custom branding", included: true },
     ],
     limitations: [],
-    cta: "Contact Sales",
+    cta: "Start Enterprise Trial",
     popular: false,
   },
 ];
@@ -167,9 +170,9 @@ const faqs: FAQ[] = [
       "Your data is never deleted. If you exceed the limits of your new plan, you'll have read-only access to the excess data until you upgrade again.",
   },
   {
-    question: "Is there a free trial for Premium?",
+    question: "Is there a free trial for Premium or Enterprise?",
     answer:
-      "Yes! You get a 14-day free trial of Premium when you sign up. No credit card required.",
+      "Yes! You get a 14-day free trial for both Premium and Enterprise plans when you sign up. No credit card required.",
   },
   {
     question: "Do you offer discounts for annual billing?",
@@ -202,9 +205,9 @@ export default function PricingPage() {
     fetchSubscriptionDetails,
     subscribeToPlan,
     cancelSubscription,
-    updatePaymentMethod,
   } = usePricingStore();
-  const [newPaymentMethodId, setNewPaymentMethodId] = useState("");
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState("");
 
   useEffect(() => {
     fetchSubscriptionDetails();
@@ -220,21 +223,21 @@ export default function PricingPage() {
       toast.info("You're already on the Free plan.");
       return;
     }
-    if (planName === "Enterprise") {
-      // In a real app, this would redirect to a contact form or sales page
-      toast.info("Contacting sales for Enterprise plan...");
-      return;
-    }
     if (currentPlan === planName.toLowerCase()) {
       toast.info("You are already subscribed to this plan.");
       return;
     }
-    // For demo; in real app, use Stripe Elements to create paymentMethodId
-    const paymentMethodId = prompt(
-      "Enter Payment Method ID (test: pm_card_visa)"
-    );
-    if (paymentMethodId) {
-      subscribeToPlan(planName.toLowerCase(), paymentMethodId);
+    setSelectedPlan(planName.toLowerCase());
+    setShowCheckoutModal(true);
+  };
+
+  const handlePaymentMethodCreated = async (paymentMethodId: string) => {
+    try {
+      await subscribeToPlan(selectedPlan, paymentMethodId);
+      setShowCheckoutModal(false);
+      setSelectedPlan("");
+    } catch (error) {
+      setShowCheckoutModal(false);
     }
   };
 
@@ -244,6 +247,25 @@ export default function PricingPage() {
 
   return (
     <div className="p-6 space-y-8 min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+      {/* Checkout Modal */}
+      {showCheckoutModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-semibold mb-4">
+              Subscribe to {toTitleCase(selectedPlan)} Plan
+            </h2>
+            <Elements stripe={stripePromise}>
+              <CheckoutForm
+                plan={selectedPlan}
+                action="subscribe"
+                onSuccess={handlePaymentMethodCreated}
+                onCancel={() => setShowCheckoutModal(false)}
+              />
+            </Elements>
+          </div>
+        </div>
+      )}
+
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold text-gray-900">Choose Your Plan</h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -268,7 +290,6 @@ export default function PricingPage() {
         {plans.map((plan) => {
           const Icon = plan.icon;
           const isCurrentPlan = currentPlan === plan.name.toLowerCase();
-          const isEnterprisePlan = plan.name === "Enterprise";
 
           return (
             <Card
@@ -327,17 +348,14 @@ export default function PricingPage() {
                       Current Plan
                     </Button>
                   )
-                ) : isEnterprisePlan ? (
-                  <Button
-                    onClick={() => handleCtaClick(plan.name)}
-                    className={`w-full py-1 rounded-md bg-yellow-600 hover:bg-yellow-700 text-white`}
-                  >
-                    Contact Sales
-                  </Button>
                 ) : (
                   <Button
                     onClick={() => handleCtaClick(plan.name)}
-                    className={`w-full py-1 rounded-md bg-purple-600 hover:bg-purple-700 text-white`}
+                    className={`w-full py-1 rounded-md ${
+                      plan.name === "Enterprise"
+                        ? "bg-yellow-600 hover:bg-yellow-700"
+                        : "bg-purple-600 hover:bg-purple-700"
+                    } text-white`}
                   >
                     {plan.cta}
                   </Button>
@@ -425,14 +443,6 @@ export default function PricingPage() {
               ) : (
                 <p>No payment method on file.</p>
               )}
-              <Input
-                placeholder="New Payment Method ID (from Stripe Elements)"
-                value={newPaymentMethodId}
-                onChange={(e) => setNewPaymentMethodId(e.target.value)}
-              />
-              <Button onClick={() => updatePaymentMethod(newPaymentMethodId)}>
-                Update Payment Method
-              </Button>
             </CardContent>
           </Card>
 
