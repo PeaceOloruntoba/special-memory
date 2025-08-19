@@ -17,7 +17,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import CheckoutForm from "../../components/stripe/CheckoutForm";
 import { toTitleCase } from "../../lib/utils";
 
-const stripePromise = loadStripe("pk_test_your_publishable_key");
+const stripePromise = loadStripe("pk_test_51RvUgcRpcgBDjLSAQW2JhJ3EoU8EqqYJHFBSygUeC9rGi9KuF9Rc68n4tD1iZk1tcGCCBs4bSo5aRN12M6Tb9JjL00DVX0PiNp");
 
 interface Feature {
   name: string;
@@ -249,7 +249,7 @@ export default function PricingPage() {
     <div className="p-6 space-y-8 min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
       {/* Checkout Modal */}
       {showCheckoutModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/70 w-screen h-screen bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h2 className="text-xl font-semibold mb-4">
               Subscribe to {toTitleCase(selectedPlan)} Plan

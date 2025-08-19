@@ -35,8 +35,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import CheckoutForm from "../../components/stripe/CheckoutForm";
 import { toTitleCase } from "../../lib/utils";
 
-// Initialize Stripe with your publishable key
-const stripePromise = loadStripe("pk_test_your_publishable_key"); // Replace with your actual Stripe publishable key
+const stripePromise = loadStripe("pk_test_51RvUgcRpcgBDjLSAQW2JhJ3EoU8EqqYJHFBSygUeC9rGi9KuF9Rc68n4tD1iZk1tcGCCBs4bSo5aRN12M6Tb9JjL00DVX0PiNp");
 
 interface SwitchProps {
   checked: boolean;

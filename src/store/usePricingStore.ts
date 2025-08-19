@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { toast } from "sonner";
+import api from "../utils/api"; // Import the Axios instance
 
 type PricingStore = {
   currentPlan: string;
@@ -11,7 +13,7 @@ type PricingStore = {
   error: string | null;
   successMessage: string | null;
   fetchSubscriptionDetails: () => Promise<void>;
-  subscribeToPlan: (planId: any, paymentMethodId: any) => Promise<void>;
+  subscribeToPlan: (planId: string, paymentMethodId?: string) => Promise<void>;
   cancelSubscription: () => Promise<void>;
   updatePaymentMethod: (paymentMethodId: string) => Promise<void>;
   reset: () => void;
@@ -31,85 +33,80 @@ const usePricingStore = create<PricingStore>((set, get) => ({
   fetchSubscriptionDetails: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await fetch("/api/v1/subscriptions/details");
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message);
+      const response = await api.get("/api/v1/subscriptions/details");
       set({
-        currentPlan: result.data.planId,
-        subscriptionStatus: result.data.status,
-        startDate: result.data.startDate,
-        dueDate: result.data.dueDate,
-        paymentMethod: result.data.paymentMethod,
-        invoices: result.data.invoices,
+        currentPlan: response.data.data.planId,
+        subscriptionStatus: response.data.data.status,
+        startDate: response.data.data.startDate,
+        dueDate: response.data.data.dueDate,
+        paymentMethod: response.data.data.paymentMethod,
+        invoices: response.data.data.invoices,
         isLoading: false,
       });
     } catch (err: any) {
-      set({ isLoading: false, error: err.message });
+      const errMsg = err.message || "Failed to fetch subscription details";
+      set({ isLoading: false, error: errMsg });
+      toast.error(errMsg);
     }
   },
 
-  subscribeToPlan: async (planId: any, paymentMethodId: any) => {
+  subscribeToPlan: async (planId: string, paymentMethodId?: string) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      const response = await fetch("/api/v1/subscriptions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ planId, paymentMethodId }),
+      const response = await api.post("/api/v1/subscriptions", {
+        planId,
+        paymentMethodId,
       });
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.message || "Subscription failed.");
-      }
       set({
         currentPlan: planId,
-        subscriptionStatus: result.data.subscription.status,
+        subscriptionStatus: response.data.data.subscription.status,
         isLoading: false,
-        successMessage: result.message,
+        successMessage: response.data.message || "Subscription successful",
       });
       get().fetchSubscriptionDetails();
     } catch (err: any) {
-      console.error("Error subscribing to plan:", err);
-      set({ isLoading: false, error: err.message });
+      const errMsg = err.message || "Subscription failed";
+      set({ isLoading: false, error: errMsg });
+      toast.error(errMsg);
+      throw err;
     }
   },
 
   cancelSubscription: async () => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      const response = await fetch("/api/v1/subscriptions/cancel", {
-        method: "POST",
-      });
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.message || "Cancellation failed.");
-      }
+      const response = await api.post("/api/v1/subscriptions/cancel");
       set({
         isLoading: false,
-        successMessage: result.message,
+        successMessage:
+          response.data.message || "Subscription cancelled successfully",
       });
       get().fetchSubscriptionDetails();
     } catch (err: any) {
-      console.error("Error cancelling subscription:", err);
-      set({ isLoading: false, error: err.message });
+      const errMsg = err.message || "Cancellation failed";
+      set({ isLoading: false, error: errMsg });
+      toast.error(errMsg);
+      throw err;
     }
   },
 
   updatePaymentMethod: async (paymentMethodId: string) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
-      const response = await fetch("/api/v1/subscriptions/payment-method", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paymentMethodId }),
+      const response = await api.patch("/api/v1/subscriptions/payment-method", {
+        paymentMethodId,
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message);
-      set({ isLoading: false, successMessage: result.message });
+      set({
+        isLoading: false,
+        successMessage:
+          response.data.message || "Payment method updated successfully",
+      });
       get().fetchSubscriptionDetails();
     } catch (err: any) {
-      set({ isLoading: false, error: err.message });
+      const errMsg = err.message || "Failed to update payment method";
+      set({ isLoading: false, error: errMsg });
+      toast.error(errMsg);
+      throw err;
     }
   },
 

@@ -19,7 +19,7 @@ import Calendar from "./pages/designer/Calendar";
 import Analytics from "./pages/designer/Analytics";
 import Pricing from "./pages/designer/Pricing";
 import Settings from "./pages/designer/Settings";
-import SubscribePage from "./pages/designer/Subscribe";
+// import SubscribePage from "./pages/designer/Subscribe";
 import PatternDesignerPage from "./pages/designer/Patterns";
 import AIPatternPage from "./pages/designer/AIPatterns";
 
@@ -118,14 +118,6 @@ export default function App() {
             element={
               <AdminGuard>
                 <Pricing />
-              </AdminGuard>
-            }
-          />
-          <Route
-            path="/pricing/subscribe"
-            element={
-              <AdminGuard>
-                <SubscribePage />
               </AdminGuard>
             }
           />
