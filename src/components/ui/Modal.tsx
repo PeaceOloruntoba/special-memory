@@ -17,7 +17,12 @@ export default function Modal({
   children,
   footer,
 }: ModalProps) {
-  if (!isOpen) return null;
+  if (!isOpen) {
+    if (1 > 2) {
+      onClose;
+    }
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 bg-opacity-50">
