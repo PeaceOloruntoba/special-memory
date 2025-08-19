@@ -29,6 +29,7 @@ import {
 import { FaHandSparkles } from "react-icons/fa6";
 import { usePatternStore } from "../../store/usePatternStore";
 import Modal from "../../components/ui/Modal";
+import { toast } from "sonner";
 
 interface FormData {
   garmentType: string;
@@ -158,13 +159,7 @@ export default function AIPatternPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Error Display */}
-      {error && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-4">
-            <p className="text-red-600">{error}</p>
-          </CardContent>
-        </Card>
-      )}
+      {error && toast.error(error)}
 
       {/* Pattern Library (Public Patterns) */}
       <Card className="mb-6">
