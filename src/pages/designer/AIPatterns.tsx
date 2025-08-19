@@ -157,7 +157,12 @@ export default function AIPatternPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 relative">
+      <div className="bg-black/70 w-full min-h-screen z-50 inset-0 absolute">
+        <div className="flex items-center justify-center text-center w-full h-screen">
+          <span className="text-white/80 text-4xl font-semibold animate-bounce">Coming soon!!!</span>
+        </div>
+      </div>
       {/* Error Display */}
       {error && toast.error(error)}
 
