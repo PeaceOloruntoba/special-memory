@@ -1065,7 +1065,7 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <div>
                   <h4 className="font-semibold mb-2">Change Password</h4>
-                  <div className="space-y-3">
+                  <div className="flex flex-col space-y-3">
                     <Input
                       type="password"
                       placeholder="Current password"

@@ -9,11 +9,12 @@ import {
 } from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import usePricingStore from "../../store/usePricingStore";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { BiLoaderAlt } from "react-icons/bi";
+import Input from "../../components/ui/Input"; // Assuming you have an Input component
 
 interface Feature {
   name: string;
@@ -188,9 +189,31 @@ const faqs: FAQ[] = [
 ];
 
 export default function PricingPage() {
-  const { currentPlan, subscriptionStatus, isLoading, cancelSubscription } =
-    usePricingStore();
-  const navigate = useNavigate();
+  const {
+    currentPlan,
+    subscriptionStatus,
+    startDate,
+    dueDate,
+    paymentMethod,
+    invoices,
+    isLoading,
+    error,
+    successMessage,
+    fetchSubscriptionDetails,
+    subscribeToPlan,
+    cancelSubscription,
+    updatePaymentMethod,
+  } = usePricingStore();
+  const [newPaymentMethodId, setNewPaymentMethodId] = useState("");
+
+  useEffect(() => {
+    fetchSubscriptionDetails();
+  }, []);
+
+  useEffect(() => {
+    if (error) toast.error(error);
+    if (successMessage) toast.success(successMessage);
+  }, [error, successMessage]);
 
   const handleCtaClick = (planName: string) => {
     if (planName === "Free") {
@@ -202,11 +225,17 @@ export default function PricingPage() {
       toast.info("Contacting sales for Enterprise plan...");
       return;
     }
-    if (currentPlan === planName) {
+    if (currentPlan === planName.toLowerCase()) {
       toast.info("You are already subscribed to this plan.");
       return;
     }
-    navigate(`/pricing/subscribe?plan=${planName.toLowerCase()}`);
+    // For demo; in real app, use Stripe Elements to create paymentMethodId
+    const paymentMethodId = prompt(
+      "Enter Payment Method ID (test: pm_card_visa)"
+    );
+    if (paymentMethodId) {
+      subscribeToPlan(planName.toLowerCase(), paymentMethodId);
+    }
   };
 
   const handleCancelSubscription = async () => {
@@ -238,7 +267,7 @@ export default function PricingPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {plans.map((plan) => {
           const Icon = plan.icon;
-          const isCurrentPlan = currentPlan === plan.name;
+          const isCurrentPlan = currentPlan === plan.name.toLowerCase();
           const isEnterprisePlan = plan.name === "Enterprise";
 
           return (
@@ -362,6 +391,71 @@ export default function PricingPage() {
           );
         })}
       </div>
+
+      {/* Subscription Details if not free */}
+      {currentPlan !== "free" && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Subscription Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p>Status: {subscriptionStatus}</p>
+              <p>
+                Start Date:{" "}
+                {startDate ? new Date(startDate).toLocaleDateString() : "N/A"}
+              </p>
+              <p>
+                Next Billing:{" "}
+                {dueDate ? new Date(dueDate).toLocaleDateString() : "N/A"}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment Method</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {paymentMethod ? (
+                <p>
+                  {paymentMethod.brand} **** {paymentMethod.last4} (Exp:{" "}
+                  {paymentMethod.exp})
+                </p>
+              ) : (
+                <p>No payment method on file.</p>
+              )}
+              <Input
+                placeholder="New Payment Method ID (from Stripe Elements)"
+                value={newPaymentMethodId}
+                onChange={(e) => setNewPaymentMethodId(e.target.value)}
+              />
+              <Button onClick={() => updatePaymentMethod(newPaymentMethodId)}>
+                Update Payment Method
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Billing History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {invoices.length > 0 ? (
+                <ul className="space-y-2">
+                  {invoices.map((inv, i) => (
+                    <li key={i}>
+                      {inv.date} - {inv.amount} ({inv.status})
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No invoices yet.</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Feature Comparison Table */}
       <div className="space-y-6">
