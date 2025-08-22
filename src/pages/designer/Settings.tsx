@@ -234,7 +234,7 @@ export default function SettingsPage() {
   }>({
     theme: "light",
     language: "en",
-    timezone: "America/New_York",
+    timezone: "Europe/Berlin",
     currency: "USD",
     measurementUnit: "inches",
     defaultProjectDuration: "14",
@@ -284,7 +284,7 @@ export default function SettingsPage() {
       setPreferences({
         theme: user.settings?.theme ?? "light",
         language: user.settings?.language ?? "en",
-        timezone: user.settings?.timezone ?? "America/New_York",
+        timezone: user.settings?.timezone ?? "Europe/Berlin",
         currency: user.settings?.currency ?? "USD",
         measurementUnit: user.settings?.measurementUnit ?? "inches",
         defaultProjectDuration: user.settings?.defaultProjectDuration ?? "14",
