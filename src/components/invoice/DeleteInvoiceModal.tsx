@@ -4,7 +4,7 @@ import { useInvoiceStore } from "../../store/useInvoiceStore";
 interface DeleteInvoiceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  invoice: { id: string; invoiceNumber: string };
+  invoice: { _id: string; invoiceNumber: string };
 }
 
 const DeleteInvoiceModal: React.FC<DeleteInvoiceModalProps> = ({
@@ -16,7 +16,7 @@ const DeleteInvoiceModal: React.FC<DeleteInvoiceModalProps> = ({
 
   const handleDelete = async () => {
     try {
-      await deleteInvoice(invoice.id);
+      await deleteInvoice(invoice._id);
       onClose();
     } catch (error) {}
   };

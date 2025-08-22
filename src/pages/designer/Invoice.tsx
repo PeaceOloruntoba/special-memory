@@ -331,7 +331,7 @@ const Invoices: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredInvoices.map((invoice) => (
               <Card
-                key={invoice.id}
+                key={invoice._id}
                 className="hover:shadow-lg transition-shadow bg-white"
               >
                 <CardHeader>
@@ -461,7 +461,7 @@ const Invoices: React.FC = () => {
           </div>
           <div className="space-y-4">
             {filteredInvoices.map((invoice) => (
-              <Card key={invoice.id} className="bg-white">
+              <Card key={invoice._id} className="bg-white">
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row gap-8 md:items-center md:justify-between pt-4">
                     <div className="flex items-center gap-4 flex-1">

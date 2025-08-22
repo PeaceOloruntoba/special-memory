@@ -85,7 +85,7 @@ export const useInvoiceStore = create<InvoiceState>()(
           const fetchedInvoices: Invoice[] = response.data.data.invoices.map(
             (inv: any) => ({
               ...inv,
-              id: inv._id,
+              _id: inv._id,
               clientId: inv.clientId._id,
               projectId: inv.projectId?._id,
             })
@@ -145,7 +145,7 @@ export const useInvoiceStore = create<InvoiceState>()(
 
           set((state) => ({
             invoices: state.invoices.map((inv) =>
-              inv.id === invoiceId ? updatedInvoice : inv
+              inv._id === invoiceId ? updatedInvoice : inv
             ),
             isLoading: false,
             error: null,
@@ -166,7 +166,7 @@ export const useInvoiceStore = create<InvoiceState>()(
           await api.delete(`/api/v1/invoices/${invoiceId}`);
 
           set((state) => ({
-            invoices: state.invoices.filter((inv) => inv.id !== invoiceId),
+            invoices: state.invoices.filter((inv) => inv._id !== invoiceId),
             isLoading: false,
             error: null,
           }));

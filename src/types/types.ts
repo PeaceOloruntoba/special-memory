@@ -1,5 +1,5 @@
 export interface Invoice {
-  id: string;
+  _id: string;
   userId: string;
   clientId: string;
   projectId?: string;
