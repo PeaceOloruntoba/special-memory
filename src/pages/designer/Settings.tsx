@@ -792,9 +792,6 @@ export default function SettingsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Spanish</SelectItem>
-                      <SelectItem value="fr">French</SelectItem>
-                      <SelectItem value="it">Italian</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -811,17 +808,47 @@ export default function SettingsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="America/New_York">
-                        Eastern Time
+                      <SelectItem value="Europe/Berlin">
+                        GMT+01:00 + Europe/Berlin
                       </SelectItem>
-                      <SelectItem value="America/Chicago">
-                        Central Time
+                      <SelectItem value="Europe/Athens">
+                        GMT+02:00 + Europe/Athens
                       </SelectItem>
-                      <SelectItem value="America/Denver">
-                        Mountain Time
+                      <SelectItem value="Europe/Moscow">
+                        GMT+03:00 + Europe/Moscow
                       </SelectItem>
-                      <SelectItem value="America/Los_Angeles">
-                        Pacific Time
+                      <SelectItem value="Asia/Dubai">
+                        GMT+04:00 + Asia/Dubai
+                      </SelectItem>
+                      <SelectItem value="Asia/Karachi">
+                        GMT+05:00 + Asia/Karachi
+                      </SelectItem>
+                      <SelectItem value="Asia/Dhaka">
+                        GMT+06:00 + Asia/Dhaka
+                      </SelectItem>
+                      <SelectItem value="Asia/Bangkok">
+                        GMT+07:00 + Asia/Bangkok
+                      </SelectItem>
+                      <SelectItem value="Asia/Shanghai">
+                        GMT+08:00 + Asia/Shanghai
+                      </SelectItem>
+                      <SelectItem value="Asia/Tokyo">
+                        GMT+09:00 + Asia/Tokyo
+                      </SelectItem>
+                      <SelectItem value="Australia/Sydney">
+                        GMT+10:00 + Australia/Sydney
+                      </SelectItem>
+                      <SelectItem value="Pacific/Noumea">
+                        GMT+11:00 + Pacific/Noumea
+                      </SelectItem>
+                      <SelectItem value="Pacific/Auckland">
+                        GMT+12:00 + Pacific/Auckland
+                      </SelectItem>
+                      <SelectItem value="Pacific/Tongatapu">
+                        GMT+13:00 + Pacific/Tongatapu
+                      </SelectItem>
+                      <SelectItem value="Pacific/Kiritimati">
+                        GMT+14:00 + Pacific/Kiritimati
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -840,9 +867,6 @@ export default function SettingsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="USD">USD ($)</SelectItem>
-                      <SelectItem value="EUR">EUR (€)</SelectItem>
-                      <SelectItem value="GBP">GBP (£)</SelectItem>
-                      <SelectItem value="CAD">CAD (C$)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
