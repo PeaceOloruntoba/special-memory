@@ -24,6 +24,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error) => {
