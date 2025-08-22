@@ -82,11 +82,12 @@ export const useInvoiceStore = create<InvoiceState>()(
           }
 
           const response = await api.get(url);
+          console.log(response)
           const fetchedInvoices: Invoice[] = response.data.data.invoices.map(
             (inv: any) => ({
               ...inv,
               _id: inv._id,
-              clientId: inv.clientId._id,
+              clientId: inv.clientId?._id,
               projectId: inv.projectId?._id,
             })
           );
