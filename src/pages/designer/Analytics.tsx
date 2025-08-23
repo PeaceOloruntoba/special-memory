@@ -112,7 +112,7 @@ export default function AnalyticsPage() {
   const formatPercentageChange = (change: number) => {
     if (change === 0) return "0%";
     const sign = change > 0 ? "+" : "";
-    return `${sign}${change.toFixed(1)}%`;
+    return `${sign}${change?.toFixed(1)}%`;
   };
 
   const getTrendingIcon = (change: number) => {
@@ -413,7 +413,7 @@ export default function AnalyticsPage() {
                     className="h-3"
                   />
                   <p className="text-xs text-gray-600">
-                    {revenueGoals.monthly.percentage.toFixed(1)}% of monthly
+                    {revenueGoals.monthly.percentage?.toFixed(1)}% of monthly
                     target achieved
                   </p>
                 </div>
@@ -430,7 +430,7 @@ export default function AnalyticsPage() {
                     className="h-3"
                   />
                   <p className="text-xs text-gray-600">
-                    {revenueGoals.yearly.percentage.toFixed(1)}% of yearly
+                    {revenueGoals.yearly.percentage?.toFixed(1)}% of yearly
                     target achieved
                   </p>
                 </div>
@@ -465,7 +465,7 @@ export default function AnalyticsPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-3 bg-gray-50 rounded-lg">
                       <div className="text-lg font-bold">
-                        {clientInsights.avgProjectsPerClient.toFixed(2)}
+                        {clientInsights.avgProjectsPerClient?.toFixed(2)}
                       </div>
                       <div className="text-xs text-gray-600">
                         Avg. projects per client
@@ -473,7 +473,7 @@ export default function AnalyticsPage() {
                     </div>
                     <div className="text-center p-3 bg-gray-50 rounded-lg">
                       <div className="text-lg font-bold">
-                        {clientInsights.clientRetentionRate.toFixed(1)}%
+                        {clientInsights.clientRetentionRate?.toFixed(1)}%
                       </div>
                       <div className="text-xs text-gray-600">
                         Client retention rate
@@ -576,7 +576,7 @@ export default function AnalyticsPage() {
                   <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
                     <div>
                       <div className="text-2xl font-bold text-green-700">
-                        {projectPerformance.timelinePerformance.onTimeDeliveryRate.toFixed(
+                        {projectPerformance.timelinePerformance.onTimeDeliveryRate?.toFixed(
                           1
                         )}
                         %
@@ -590,7 +590,7 @@ export default function AnalyticsPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-3 bg-gray-50 rounded-lg">
                       <div className="text-lg font-bold">
-                        {projectPerformance.timelinePerformance.avgDaysToComplete.toFixed(
+                        {projectPerformance.timelinePerformance.avgDaysToComplete?.toFixed(
                           1
                         )}
                       </div>
