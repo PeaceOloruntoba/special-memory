@@ -91,7 +91,7 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
   const handleUpdateInvoice = async () => {
     if (!formData.clientId) return;
     try {
-      await updateInvoice(invoice.id, {
+      await updateInvoice(invoice._id, {
         clientId: formData.clientId,
         projectId: formData.projectId || undefined,
         invoiceNumber: formData.invoiceNumber,
