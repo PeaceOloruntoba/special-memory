@@ -30,6 +30,7 @@ import {
 import { useCalendarStore } from "../../store/useCalendarStore";
 import { useClientStore } from "../../store/useClientStore";
 import type { CalendarEvent } from "../../types/types";
+import { useNavigate } from "react-router";
 
 interface AddEventModalProps {
   isOpen: boolean;
@@ -111,7 +112,10 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
               <Select
                 value={newEvent.type}
                 onValueChange={(value) =>
-                  setNewEvent({ ...newEvent, type: value as CalendarEvent["type"] })
+                  setNewEvent({
+                    ...newEvent,
+                    type: value as CalendarEvent["type"],
+                  })
                 }
               >
                 <SelectTrigger>
@@ -199,7 +203,14 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
 };
 
 export default function Calendar() {
-  const { events, isLoading, error, getAllEvents } = useCalendarStore();
+  const {
+    events,
+    isLoading,
+    error,
+    errorCode,
+    featureLocked,
+    getAllEvents,
+  } = useCalendarStore();
   const { clients, getAllClients } = useClientStore();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -300,7 +311,7 @@ export default function Calendar() {
     );
   }
 
-  if (error && !events.length) {
+  if (!featureLocked && error && !events.length) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 p-4 min-h-screen">
         <p className="text-xl text-red-500 mb-4">Error: {error}</p>
@@ -317,255 +328,283 @@ export default function Calendar() {
     );
   }
 
+  const navigate = useNavigate();
+
   return (
-    <div className="p-6 space-y-6 min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
-          <p className="text-gray-600">
-            Manage appointments, fittings, and deadlines
-          </p>
+    <div className="space-y-6 min-h-screen relative bg-gradient-to-br from-purple-50 to-pink-50">
+      {featureLocked || errorCode === "PLAN_UPGRADE_REQUIRED" ? (
+        <div className="w-full h-full absolute flex flex-col gap-4 items-center justify-center z-20 bg-black/80">
+          <p className="text-2xl text-white font-semibold ">Error: {error || "This feature is not available on your current plan."}</p>
+          <span className="text-xl text-white">
+            Visit our pricing list{" "}
+            <Button
+              onClick={() => navigate("/pricing")}
+              children={"Pricing"}
+              className="bg-black/90 text-white hover:bg-black/80 px-4 py-2 rounded-md cursor-pointer"
+            />
+          </span>
         </div>
-        <Button
-          className="bg-black/90 flex items-center justify-center text-nowrap text-white hover:bg-black/80 px-4 py-2 rounded-md cursor-pointer"
-          onClick={() => setIsAddModalOpen(true)}
-        >
-          <BiPlus className="h-4 w-4 mr-2" />
-          Add Event
-        </Button>
-      </div>
+      ) : (
+        <>
+          <div className="flex justify-between items-center p-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
+              <p className="text-gray-600">
+                Manage appointments, fittings, and deadlines
+              </p>
+            </div>
+            <Button
+              className="bg-black/90 flex items-center justify-center text-nowrap text-white hover:bg-black/80 px-4 py-2 rounded-md cursor-pointer"
+              onClick={() => !featureLocked && setIsAddModalOpen(true)}
+              disabled={featureLocked}
+            >
+              <BiPlus className="h-4 w-4 mr-2" />
+              Add Event
+            </Button>
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar Grid */}
-        <div className="lg:col-span-2">
-          <Card className="bg-white">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <BiCalendar className="h-5 w-5" />
-                  {monthNames[currentDate.getMonth()]}{" "}
-                  {currentDate.getFullYear()}
-                </CardTitle>
-                <div className="flex gap-2">
-                  <Button onClick={() => navigateMonth("prev")}>
-                    <BiChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button onClick={() => navigateMonth("next")}>
-                    <BiChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-7 gap-1 mb-4">
-                {dayNames.map((day) => (
-                  <div
-                    key={day}
-                    className="p-2 text-center text-sm font-medium text-gray-500"
-                  >
-                    {day}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+            {/* Calendar Grid */}
+            <div className="lg:col-span-2">
+              <Card className="bg-white">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <BiCalendar className="h-5 w-5" />
+                      {monthNames[currentDate.getMonth()]}{" "}
+                      {currentDate.getFullYear()}
+                    </CardTitle>
+                    <div className="flex gap-2">
+                      <Button onClick={() => navigateMonth("prev")}>
+                        <BiChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <Button onClick={() => navigateMonth("next")}>
+                        <BiChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-7 gap-1">
-                {days.map((day, index) => {
-                  if (day === null) {
-                    return <div key={index} className="p-2 h-24"></div>;
-                  }
-
-                  const dateString = formatDate(
-                    currentDate.getFullYear(),
-                    currentDate.getMonth(),
-                    day
-                  );
-                  const dayEvents = getEventsForDate(dateString);
-                  const isToday =
-                    dateString === new Date().toISOString().split("T")[0];
-
-                  return (
-                    <div
-                      key={day}
-                      className={`p-2 h-24 border border-gray-200 cursor-pointer hover:bg-gray-50 ${
-                        isToday ? "bg-blue-50 border-blue-200" : ""
-                      }`}
-                      onClick={() => setSelectedDate(dateString)}
-                    >
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-7 gap-1 mb-4">
+                    {dayNames.map((day) => (
                       <div
-                        className={`text-sm font-medium mb-1 ${
-                          isToday ? "text-blue-600" : ""
-                        }`}
+                        key={day}
+                        className="p-2 text-center text-sm font-medium text-gray-500"
                       >
                         {day}
                       </div>
-                      <div className="space-y-1">
-                        {dayEvents.slice(0, 2).map((event) => (
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-1">
+                    {days.map((day, index) => {
+                      if (day === null) {
+                        return <div key={index} className="p-2 h-24"></div>;
+                      }
+
+                      const dateString = formatDate(
+                        currentDate.getFullYear(),
+                        currentDate.getMonth(),
+                        day
+                      );
+                      const dayEvents = getEventsForDate(dateString);
+                      const isToday =
+                        dateString === new Date().toISOString().split("T")[0];
+
+                      return (
+                        <div
+                          key={day}
+                          className={`p-2 h-24 border border-gray-200 cursor-pointer hover:bg-gray-50 ${
+                            isToday ? "bg-blue-50 border-blue-200" : ""
+                          }`}
+                          onClick={() => setSelectedDate(dateString)}
+                        >
                           <div
-                            key={event.id}
-                            className={`text-xs p-1 rounded truncate ${getEventTypeColor(
-                              event.type
-                            )}`}
+                            className={`text-sm font-medium mb-1 ${
+                              isToday ? "text-blue-600" : ""
+                            }`}
                           >
+                            {day}
+                          </div>
+                          <div className="space-y-1">
+                            {dayEvents.slice(0, 2).map((event) => (
+                              <div
+                                key={event.id}
+                                className={`text-xs p-1 rounded truncate ${getEventTypeColor(
+                                  event.type
+                                )}`}
+                              >
+                                {new Date(event.startTime).toLocaleTimeString(
+                                  [],
+                                  {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  }
+                                )}{" "}
+                                {event.title}
+                              </div>
+                            ))}
+                            {dayEvents.length > 2 && (
+                              <div className="text-xs text-gray-500">
+                                +{dayEvents.length - 2} more
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Upcoming Events */}
+            <div className="space-y-6">
+              <Card className="bg-white">
+                <CardHeader>
+                  <CardTitle>Upcoming Events</CardTitle>
+                  <CardDescription>Next 7 days</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {events
+                    .filter((event) => {
+                      const eventDate = new Date(event.startTime);
+                      const today = new Date();
+                      const nextWeek = new Date(
+                        today.getTime() + 7 * 24 * 60 * 60 * 1000
+                      );
+                      return eventDate >= today && eventDate <= nextWeek;
+                    })
+                    .sort(
+                      (a, b) =>
+                        new Date(a.startTime).getTime() -
+                        new Date(b.startTime).getTime()
+                    )
+                    .map((event) => (
+                      <div
+                        key={event.id}
+                        className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div className="flex-shrink-0">
+                          <BiTime className="h-4 w-4 text-gray-500 mt-1" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-medium text-sm truncate">
+                              {event.title}
+                            </h4>
+                            <Badge className={getEventTypeColor(event.type)}>
+                              {event.type}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-gray-600 space-y-1">
+                            <div className="flex items-center gap-1">
+                              <BiUser className="h-3 w-3" />
+                              {event.clientName || "No Client"}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <BiCalendar className="h-3 w-3" />
+                              {new Date(
+                                event.startTime
+                              ).toLocaleDateString()} {" "}
+                              at {" "}
+                              {new Date(event.startTime).toLocaleTimeString(
+                                [],
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )}
+                            </div>
+                            {event.location && (
+                              <div className="flex items-center gap-1">
+                                <BiMap className="h-3 w-3" />
+                                {event.location}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  {events.filter((event) => {
+                    const eventDate = new Date(event.startTime);
+                    const today = new Date();
+                    const nextWeek = new Date(
+                      today.getTime() + 7 * 24 * 60 * 60 * 1000
+                    );
+                    return eventDate >= today && eventDate <= nextWeek;
+                  }).length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      <BiCalendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>No events scheduled in the next 7 days</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Today's Schedule */}
+              <Card className="bg-white">
+                <CardHeader>
+                  <CardTitle>Today's Schedule</CardTitle>
+                  <CardDescription>
+                    {new Date().toLocaleDateString()}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {events
+                    .filter((event) =>
+                      event.startTime.startsWith(
+                        new Date().toISOString().split("T")[0]
+                      )
+                    )
+                    .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                    .map((event) => (
+                      <div
+                        key={event.id}
+                        className="flex items-center justify-between py-2 border-b last:border-b-0"
+                      >
+                        <div>
+                          <div className="font-medium text-sm">
+                            {event.title}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {event.clientName || "No Client"}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-medium">
                             {new Date(event.startTime).toLocaleTimeString([], {
                               hour: "2-digit",
                               minute: "2-digit",
-                            })}{" "}
-                            {event.title}
+                            })}
                           </div>
-                        ))}
-                        {dayEvents.length > 2 && (
-                          <div className="text-xs text-gray-500">
-                            +{dayEvents.length - 2} more
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Upcoming Events */}
-        <div className="space-y-6">
-          <Card className="bg-white">
-            <CardHeader>
-              <CardTitle>Upcoming Events</CardTitle>
-              <CardDescription>Next 7 days</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {events
-                .filter((event) => {
-                  const eventDate = new Date(event.startTime);
-                  const today = new Date();
-                  const nextWeek = new Date(
-                    today.getTime() + 7 * 24 * 60 * 60 * 1000
-                  );
-                  return eventDate >= today && eventDate <= nextWeek;
-                })
-                .sort(
-                  (a, b) =>
-                    new Date(a.startTime).getTime() -
-                    new Date(b.startTime).getTime()
-                )
-                .map((event) => (
-                  <div
-                    key={event.id}
-                    className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div className="flex-shrink-0">
-                      <BiTime className="h-4 w-4 text-gray-500 mt-1" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium text-sm truncate">
-                          {event.title}
-                        </h4>
-                        <Badge className={getEventTypeColor(event.type)}>
-                          {event.type}
-                        </Badge>
-                      </div>
-                      <div className="text-xs text-gray-600 space-y-1">
-                        <div className="flex items-center gap-1">
-                          <BiUser className="h-3 w-3" />
-                          {event.clientName || "No Client"}
+                          <Badge className={getEventTypeColor(event.type)}>
+                            {event.type}
+                          </Badge>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <BiCalendar className="h-3 w-3" />
-                          {new Date(
-                            event.startTime
-                          ).toLocaleDateString()} at{" "}
-                          {new Date(event.startTime).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </div>
-                        {event.location && (
-                          <div className="flex items-center gap-1">
-                            <BiMap className="h-3 w-3" />
-                            {event.location}
-                          </div>
-                        )}
                       </div>
+                    ))}
+                  {events.filter((event) =>
+                    event.startTime.startsWith(
+                      new Date().toISOString().split("T")[0]
+                    )
+                  ).length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      <BiCalendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>No events scheduled for today</p>
                     </div>
-                  </div>
-                ))}
-              {events.filter((event) => {
-                const eventDate = new Date(event.startTime);
-                const today = new Date();
-                const nextWeek = new Date(
-                  today.getTime() + 7 * 24 * 60 * 60 * 1000
-                );
-                return eventDate >= today && eventDate <= nextWeek;
-              }).length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <BiCalendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>No events scheduled in the next 7 days</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
 
-          {/* Today's Schedule */}
-          <Card className="bg-white">
-            <CardHeader>
-              <CardTitle>Today's Schedule</CardTitle>
-              <CardDescription>
-                {new Date().toLocaleDateString()}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {events
-                .filter((event) =>
-                  event.startTime.startsWith(
-                    new Date().toISOString().split("T")[0]
-                  )
-                )
-                .sort((a, b) => a.startTime.localeCompare(b.startTime))
-                .map((event) => (
-                  <div
-                    key={event.id}
-                    className="flex items-center justify-between py-2 border-b last:border-b-0"
-                  >
-                    <div>
-                      <div className="font-medium text-sm">{event.title}</div>
-                      <div className="text-xs text-gray-600">
-                        {event.clientName || "No Client"}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium">
-                        {new Date(event.startTime).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </div>
-                      <Badge className={getEventTypeColor(event.type)}>
-                        {event.type}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              {events.filter((event) =>
-                event.startTime.startsWith(
-                  new Date().toISOString().split("T")[0]
-                )
-              ).length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <BiCalendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>No events scheduled for today</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      <AddEventModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-      />
+          <AddEventModal
+            isOpen={isAddModalOpen}
+            onClose={() => setIsAddModalOpen(false)}
+          />
+        </>
+      )}
     </div>
   );
 }

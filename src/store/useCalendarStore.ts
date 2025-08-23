@@ -30,6 +30,8 @@ interface CalendarState {
   events: CalendarEvent[];
   isLoading: boolean;
   error: string | null;
+  errorCode: string | null;
+  featureLocked: boolean;
   lastFetched: number | null;
 
   addEvent: (eventData: {
@@ -68,6 +70,8 @@ export const useCalendarStore = create<CalendarState>()(
       events: [],
       isLoading: false,
       error: null,
+      errorCode: null,
+      featureLocked: false,
       lastFetched: null,
 
       /**
@@ -75,7 +79,7 @@ export const useCalendarStore = create<CalendarState>()(
        * @param eventData - The data for the new event.
        */
       addEvent: async (eventData) => {
-        set({ isLoading: true, error: null });
+        set({ isLoading: true, error: null, errorCode: null });
         try {
           const response = await api.post("/api/v1/calendar", eventData);
           const newEvent: CalendarEvent = {
@@ -88,12 +92,14 @@ export const useCalendarStore = create<CalendarState>()(
             events: [newEvent, ...state.events],
             isLoading: false,
             error: null,
+            errorCode: null,
+            featureLocked: false,
           }));
           toast.success("Event added successfully!");
         } catch (error: any) {
           const errorMessage =
             error.response?.data?.message || "Failed to add event.";
-          set({ error: errorMessage, isLoading: false });
+          set({ error: errorMessage, errorCode: null, isLoading: false });
           toast.error(errorMessage);
           throw error;
         }
@@ -104,7 +110,7 @@ export const useCalendarStore = create<CalendarState>()(
        * @param filterOptions - An object containing optional clientId, startDate, or endDate for filtering.
        */
       getAllEvents: async (filterOptions) => {
-        set({ isLoading: true, error: null });
+        set({ isLoading: true, error: null, errorCode: null });
         try {
           let url = "/api/v1/calendar";
           const queryParams = new URLSearchParams();
@@ -136,13 +142,26 @@ export const useCalendarStore = create<CalendarState>()(
             events: fetchedEvents,
             isLoading: false,
             error: null,
+            errorCode: null,
+            featureLocked: false,
             lastFetched: Date.now(),
           });
           toast.success("Calendar events loaded successfully!");
-        } catch (error: any) {
+        } catch (error: any) {          
+          if (error?.status === 403) {
+            const msg = "You need to upgrade to a higher plan to use this feature...";
+            toast.error(msg);
+            set({
+              error: msg,
+              errorCode: "PLAN_UPGRADE_REQUIRED",
+              featureLocked: true,
+              isLoading: false,
+            });
+            return;
+          }
           const errorMessage =
             error.response?.data?.message || "Failed to load calendar events.";
-          set({ error: errorMessage, isLoading: false });
+          set({ error: errorMessage, errorCode: null, isLoading: false });
           toast.error(errorMessage);
           throw error;
         }
@@ -154,7 +173,7 @@ export const useCalendarStore = create<CalendarState>()(
        * @returns The event object or null if not found/error.
        */
       getSingleEvent: async (eventId) => {
-        set({ isLoading: true, error: null });
+        set({ isLoading: true, error: null, errorCode: null });
         try {
           const response = await api.get(`/api/v1/calendar/${eventId}`);
           const fetchedEvent: CalendarEvent = {
@@ -163,12 +182,12 @@ export const useCalendarStore = create<CalendarState>()(
             clientName: response.data.data.event.clientId?.name,
           };
 
-          set({ isLoading: false, error: null });
+          set({ isLoading: false, error: null, errorCode: null });
           return fetchedEvent;
         } catch (error: any) {
           const errorMessage =
             error.response?.data?.message || "Failed to load event details.";
-          set({ error: errorMessage, isLoading: false });
+          set({ error: errorMessage, errorCode: null, isLoading: false });
           toast.error(errorMessage);
           throw error;
         }
@@ -180,7 +199,7 @@ export const useCalendarStore = create<CalendarState>()(
        * @param updateData - The data to update (partial CalendarEvent object).
        */
       updateEvent: async (eventId, updateData) => {
-        set({ isLoading: true, error: null });
+        set({ isLoading: true, error: null, errorCode: null });
         try {
           const response = await api.patch(
             `/api/v1/calendar/${eventId}`,
@@ -198,12 +217,14 @@ export const useCalendarStore = create<CalendarState>()(
             ),
             isLoading: false,
             error: null,
+            errorCode: null,
+            featureLocked: false,
           }));
           toast.success("Event updated successfully!");
         } catch (error: any) {
           const errorMessage =
             error.response?.data?.message || "Failed to update event.";
-          set({ error: errorMessage, isLoading: false });
+          set({ error: errorMessage, errorCode: null, isLoading: false });
           toast.error(errorMessage);
           throw error;
         }
@@ -214,7 +235,7 @@ export const useCalendarStore = create<CalendarState>()(
        * @param eventId - The ID of the event record to delete.
        */
       deleteEvent: async (eventId) => {
-        set({ isLoading: true, error: null });
+        set({ isLoading: true, error: null, errorCode: null });
         try {
           await api.delete(`/api/v1/calendar/${eventId}`);
 
@@ -222,12 +243,14 @@ export const useCalendarStore = create<CalendarState>()(
             events: state.events.filter((e) => e.id !== eventId),
             isLoading: false,
             error: null,
+            errorCode: null,
+            featureLocked: false,
           }));
           toast.success("Event deleted successfully!");
         } catch (error: any) {
           const errorMessage =
             error.response?.data?.message || "Failed to delete event.";
-          set({ error: errorMessage, isLoading: false });
+          set({ error: errorMessage, errorCode: null, isLoading: false });
           toast.error(errorMessage);
           throw error;
         }
@@ -237,7 +260,14 @@ export const useCalendarStore = create<CalendarState>()(
        * Clears all calendar event data from the store.
        */
       clearEvents: () => {
-        set({ events: [], isLoading: false, error: null, lastFetched: null });
+        set({
+          events: [],
+          isLoading: false,
+          error: null,
+          errorCode: null,
+          featureLocked: false,
+          lastFetched: null,
+        });
       },
     }),
     {
