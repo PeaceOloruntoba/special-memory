@@ -11,6 +11,7 @@ import {
 } from "react-icons/bi";
 import { Link } from "react-router";
 import Button from "../components/ui/Button";
+import PricingComponent from "../components/pricing/Pricing";
 
 export default function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -134,8 +135,7 @@ export default function LandingPage() {
               Patterns
             </h3>
             <p className="text-gray-600">
-              Create and manage design patterns for efficient workflows (coming
-              soon).
+              Create and manage design patterns for efficient workflows.
             </p>
           </div>
           <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col items-center text-center">
@@ -148,6 +148,14 @@ export default function LandingPage() {
             </p>
           </div>
         </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8">
+        <h2 className="text-3xl font-bold text-gray-900 text-center mb-8">
+          Pricing
+        </h2>
+        <PricingComponent />
       </section>
 
       {/* Footer */}
