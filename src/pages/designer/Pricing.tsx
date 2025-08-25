@@ -88,7 +88,7 @@ const plans: Plan[] = [
   },
   {
     name: "Premium",
-    price: "$49",
+    price: "$6",
     period: "per month",
     description: "Everything you need to run a professional fashion business",
     icon: BiBoltCircle,
@@ -123,7 +123,7 @@ const plans: Plan[] = [
   },
   {
     name: "Enterprise",
-    price: "$149",
+    price: "$11",
     period: "per month",
     description: "Advanced features for fashion design teams and studios",
     icon: BiCrown,

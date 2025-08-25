@@ -964,8 +964,8 @@ export default function SettingsPage() {
                     {subscriptionDetails?.planId === "free"
                       ? "$0"
                       : subscriptionDetails?.planId === "premium"
-                      ? "$49"
-                      : "$149"}
+                      ? "$6"
+                      : "$11"}
                   </div>
                   <div className="text-sm text-purple-700">per month</div>
                 </div>

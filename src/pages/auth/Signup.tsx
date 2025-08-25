@@ -67,7 +67,7 @@ export default function SignUpPage() {
     {
       id: "premium",
       name: "Premium",
-      price: "$49",
+      price: "$6",
       period: "per month",
       description: "Everything you need for your business",
       icon: FiZap,
@@ -85,7 +85,7 @@ export default function SignUpPage() {
     {
       id: "enterprise",
       name: "Enterprise",
-      price: "$149",
+      price: "$11",
       period: "per month",
       description: "Advanced features for teams",
       icon: FaCrown,
