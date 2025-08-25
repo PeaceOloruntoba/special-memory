@@ -61,9 +61,15 @@ interface SettingsStore {
   lastFetched: number | null; // Added to help with re-fetching logic
 
   fetchSettings: () => Promise<void>;
-  updateProfile: (profileData: Partial<User>) => Promise<void>;
-  updateNotifications: (notifications: Partial<UserSettings>) => Promise<void>;
-  updatePreferences: (preferences: Partial<UserSettings>) => Promise<void>;
+  updateProfile: (profileData: Partial<User>, navigate: any) => Promise<void>;
+  updateNotifications: (
+    notifications: Partial<UserSettings>,
+    navigate: any
+  ) => Promise<void>;
+  updatePreferences: (
+    preferences: Partial<UserSettings>,
+    navigate: any
+  ) => Promise<void>;
   updatePassword: (
     currentPassword: string,
     newPassword: string
@@ -106,7 +112,7 @@ export const useSettingsStore = create<SettingsStore>()(
         }
       },
 
-      updateProfile: async (profileData) => {
+      updateProfile: async (profileData, navigate) => {
         set({ isUpdating: true, error: null });
         try {
           const response = await api.patch(
@@ -116,13 +122,13 @@ export const useSettingsStore = create<SettingsStore>()(
           set({ user: response.data.data.user, isUpdating: false });
           toast.success("Profile updated successfully");
         } catch (error: any) {
-          const { message } = handleError(error);
+          const { message } = handleError(error, navigate);
           set({ error: message, isUpdating: false });
           throw error;
         }
       },
 
-      updateNotifications: async (notifications) => {
+      updateNotifications: async (notifications, navigate) => {
         set({ isUpdating: true, error: null });
         try {
           const response = await api.patch(`${API_USER_URL}/notifications`, {
@@ -131,13 +137,13 @@ export const useSettingsStore = create<SettingsStore>()(
           set({ user: response.data.data.user, isUpdating: false });
           toast.success("Notifications updated successfully");
         } catch (error: any) {
-          const { message } = handleError(error);
+          const { message } = handleError(error, navigate);
           set({ error: message, isUpdating: false });
           throw error;
         }
       },
 
-      updatePreferences: async (preferences) => {
+      updatePreferences: async (preferences, navigate) => {
         set({ isUpdating: true, error: null });
         try {
           const response = await api.patch(`${API_USER_URL}/preferences`, {
@@ -146,7 +152,7 @@ export const useSettingsStore = create<SettingsStore>()(
           set({ user: response.data.data.user, isUpdating: false });
           toast.success("Preferences updated successfully");
         } catch (error: any) {
-          const { message } = handleError(error);
+          const { message } = handleError(error, navigate);
           set({ error: message, isUpdating: false });
           throw error;
         }
@@ -257,7 +263,7 @@ export const useSettingsStore = create<SettingsStore>()(
         set({ isUpdating: true, error: null });
         try {
           const response = await api.patch(`${API_USER_URL}/2fa`, { enable });
-          response
+          response;
           set({
             user: { ...get().user!, is2FAEnabled: enable },
             isUpdating: false,

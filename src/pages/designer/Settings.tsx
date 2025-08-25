@@ -34,8 +34,11 @@ import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import CheckoutForm from "../../components/stripe/CheckoutForm";
 import { toTitleCase } from "../../lib/utils";
+import { useNavigate } from "react-router";
 
-const stripePromise = loadStripe("pk_test_51RvUgcRpcgBDjLSAQW2JhJ3EoU8EqqYJHFBSygUeC9rGi9KuF9Rc68n4tD1iZk1tcGCCBs4bSo5aRN12M6Tb9JjL00DVX0PiNp");
+const stripePromise = loadStripe(
+  "pk_test_51RvUgcRpcgBDjLSAQW2JhJ3EoU8EqqYJHFBSygUeC9rGi9KuF9Rc68n4tD1iZk1tcGCCBs4bSo5aRN12M6Tb9JjL00DVX0PiNp"
+);
 
 interface SwitchProps {
   checked: boolean;
@@ -240,6 +243,8 @@ export default function SettingsPage() {
     defaultProjectDuration: "14",
   });
 
+  const navigate = useNavigate();
+
   const [passwordFields, setPasswordFields] = useState<{
     currentPassword: string;
     newPassword: string;
@@ -295,23 +300,26 @@ export default function SettingsPage() {
   const handleSaveProfile = async () => {
     const [firstName, ...lastNameParts] = profile.name.split(" ");
     const lastName = lastNameParts.join(" ") || "";
-    await updateProfile({
-      firstName,
-      lastName,
-      email: profile.email,
-      address: profile.address,
-      bio: profile.bio,
-      website: profile.website,
-      phone: profile.phone,
-    });
+    await updateProfile(
+      {
+        firstName,
+        lastName,
+        email: profile.email,
+        address: profile.address,
+        bio: profile.bio,
+        website: profile.website,
+        phone: profile.phone,
+      },
+      navigate
+    );
   };
 
   const handleSaveNotifications = async () => {
-    await updateNotifications(notifications);
+    await updateNotifications(notifications, navigate);
   };
 
   const handleSavePreferences = async () => {
-    await updatePreferences(preferences);
+    await updatePreferences(preferences, navigate);
   };
 
   const handleUpdatePassword = async () => {
