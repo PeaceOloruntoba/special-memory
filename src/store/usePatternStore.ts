@@ -35,7 +35,8 @@ interface PatternStore {
   createPattern: (
     patternData: Partial<Pattern>,
     base64Image?: string | null,
-    isAiGenerated?: boolean
+    isAiGenerated?: boolean,
+    navigate?: any
   ) => Promise<void>;
   updatePattern: (
     patternId: string,
@@ -84,7 +85,8 @@ export const usePatternStore = create<PatternStore>()(
       createPattern: async (
         patternData,
         base64Image = null,
-        isAiGenerated = false
+        isAiGenerated = false,
+        navigate?: any
       ) => {
         set({ loading: true, error: null });
         try {
@@ -94,7 +96,7 @@ export const usePatternStore = create<PatternStore>()(
           await get().fetchPublicPatterns();
           toast.success("Pattern created successfully");
         } catch (err: any) {
-          const { message } = handleError(err);
+          const { message } = handleError(err, navigate);
           set({ error: message });
         } finally {
           set({ loading: false });

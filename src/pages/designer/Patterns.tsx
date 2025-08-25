@@ -30,6 +30,7 @@ import {
 } from "react-icons/fa";
 import { usePatternStore } from "../../store/usePatternStore";
 import Modal from "../../components/ui/Modal";
+import { useNavigate } from "react-router";
 
 interface FormData {
   garmentType: string;
@@ -109,6 +110,7 @@ export default function PatternDesignerPage() {
 
     return { x, y };
   };
+  const navigate = useNavigate();
 
   const saveCanvasState = () => {
     const canvas = canvasRef.current;
@@ -244,7 +246,8 @@ export default function PatternDesignerPage() {
           additionalDetails: formData.description,
         },
         base64Image,
-        false
+        false,
+        navigate
       );
       setIsCreateModalOpen(false);
       setFormData({
