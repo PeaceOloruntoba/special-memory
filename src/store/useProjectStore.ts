@@ -27,17 +27,20 @@ interface ProjectState {
   error: string | null;
   lastFetched: number | null;
 
-  addProject: (projectData: {
-    clientId: string;
-    name: string;
-    description?: string;
-    type: string;
-    status?: "planning" | "in-progress" | "review" | "completed";
-    priority?: "low" | "medium" | "high";
-    progress?: number;
-    dueDate?: string;
-    budget?: number;
-  }) => Promise<void>;
+  addProject: (
+    projectData: {
+      clientId: string;
+      name: string;
+      description?: string;
+      type: string;
+      status?: "planning" | "in-progress" | "review" | "completed";
+      priority?: "low" | "medium" | "high";
+      progress?: number;
+      dueDate?: string;
+      budget?: number;
+    },
+    navigate: any
+  ) => Promise<void>;
   getAllProjects: (clientId?: string) => Promise<void>;
   getSingleProject: (projectId: string) => Promise<Project | null>;
   updateProject: (
@@ -60,7 +63,7 @@ export const useProjectStore = create<ProjectState>()(
        * Adds a new project record to the database and updates the store.
        * @param projectData - The data for the new project (clientId, name, etc.).
        */
-      addProject: async (projectData) => {
+      addProject: async (projectData, navigate) => {
         set({ isLoading: true, error: null });
         try {
           const response = await api.post(`/api/v1/projects`, projectData);
@@ -78,7 +81,7 @@ export const useProjectStore = create<ProjectState>()(
           }));
           toast.success("Project added successfully!");
         } catch (error: any) {
-          const { message } = handleError(error);
+          const { message } = handleError(error, navigate);
           set({ error: message, isLoading: false });
           throw error;
         }

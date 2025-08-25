@@ -11,6 +11,7 @@ import {
 } from "../../components/ui/Select";
 import { useProjectStore } from "../../store/useProjectStore";
 import { useClientStore } from "../../store/useClientStore";
+import { useNavigate } from "react-router";
 
 const projectTypes = [
   "Wedding Dress",
@@ -59,6 +60,8 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({
       budget: "",
     });
   };
+  const navigate = useNavigate();
+  
 
   const handleAddProject = async () => {
     try {
@@ -72,7 +75,7 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({
         progress: newProject.progress,
         dueDate: newProject.dueDate || undefined,
         budget: newProject.budget ? Number(newProject.budget) : undefined,
-      });
+      }, navigate);
       resetForm();
       onClose();
     } catch (error) {
