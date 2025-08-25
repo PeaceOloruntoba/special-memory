@@ -50,7 +50,7 @@ interface CalendarState {
     endTime: string;
     location?: string;
     status?: "scheduled" | "completed" | "cancelled";
-  }) => Promise<void>;
+  }, navigate: any) => Promise<void>;
   getAllEvents: (filterOptions?: {
     clientId?: string;
     startDate?: string;
@@ -79,7 +79,7 @@ export const useCalendarStore = create<CalendarState>()(
        * Adds a new calendar event record to the database and updates the store.
        * @param eventData - The data for the new event.
        */
-      addEvent: async (eventData) => {
+      addEvent: async (eventData, navigate) => {
         set({ isLoading: true, error: null, errorCode: null });
         try {
           const response = await api.post("/api/v1/calendar", eventData);
@@ -98,7 +98,7 @@ export const useCalendarStore = create<CalendarState>()(
           }));
           toast.success("Event added successfully!");
         } catch (error: any) {
-          const { message } = handleError(error);
+          const { message } = handleError(error, navigate);
           set({ error: message, errorCode: null, isLoading: false });
           throw error;
         }

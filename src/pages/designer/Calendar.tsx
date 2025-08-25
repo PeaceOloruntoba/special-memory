@@ -37,6 +37,8 @@ interface AddEventModalProps {
   onClose: () => void;
 }
 
+const navigate = useNavigate();
+
 const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
   const { addEvent } = useCalendarStore();
   const { clients } = useClientStore();
@@ -53,10 +55,13 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
 
   const handleSubmit = async () => {
     try {
-      await addEvent({
-        ...newEvent,
-        status: "scheduled",
-      });
+      await addEvent(
+        {
+          ...newEvent,
+          status: "scheduled",
+        },
+        navigate
+      );
       onClose();
     } catch (error) {
       // Error is handled by useCalendarStore with toast notification
@@ -203,14 +208,8 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
 };
 
 export default function Calendar() {
-  const {
-    events,
-    isLoading,
-    error,
-    errorCode,
-    featureLocked,
-    getAllEvents,
-  } = useCalendarStore();
+  const { events, isLoading, error, errorCode, featureLocked, getAllEvents } =
+    useCalendarStore();
   const { clients, getAllClients } = useClientStore();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -328,13 +327,14 @@ export default function Calendar() {
     );
   }
 
-  const navigate = useNavigate();
-
   return (
     <div className="space-y-6 min-h-screen relative bg-gradient-to-br from-purple-50 to-pink-50">
       {featureLocked || errorCode === "PLAN_UPGRADE_REQUIRED" ? (
         <div className="w-full h-full absolute flex flex-col gap-4 items-center justify-center z-20 bg-black/80">
-          <p className="text-2xl text-white font-semibold ">Error: {error || "This feature is not available on your current plan."}</p>
+          <p className="text-2xl text-white font-semibold ">
+            Error:{" "}
+            {error || "This feature is not available on your current plan."}
+          </p>
           <span className="text-xl text-white">
             Visit our pricing list{" "}
             <Button
@@ -506,8 +506,8 @@ export default function Calendar() {
                               <BiCalendar className="h-3 w-3" />
                               {new Date(
                                 event.startTime
-                              ).toLocaleDateString()} {" "}
-                              at {" "}
+                              ).toLocaleDateString()}{" "}
+                              at{" "}
                               {new Date(event.startTime).toLocaleTimeString(
                                 [],
                                 {
