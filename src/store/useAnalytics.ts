@@ -78,7 +78,7 @@ interface AnalyticsState {
   error: string | null;
   lastFetched: { [key: string]: number | null };
 
-  fetchAnalytics: (timePeriod: string) => Promise<void>;
+  fetchAnalytics: (timePeriod: string, navigate: any) => Promise<void>;
   clearAnalyticsData: () => void;
 }
 
@@ -94,7 +94,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
        * Fetches analytics data for a specific time period.
        * @param timePeriod - The desired time frame (e.g., "1month", "6months", "1year", "all").
        */
-      fetchAnalytics: async (timePeriod: string) => {
+      fetchAnalytics: async (timePeriod, navigate) => {
         set({ isLoading: true, error: null });
         try {
           const response = await api.get(
@@ -115,7 +115,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
             `Analytics data for ${timePeriod} loaded successfully!`
           );
         } catch (error: any) {
-          const { message } = handleError(error);
+          const { message } = handleError(error, navigate);
           set({ error: message, isLoading: false });
           console.error(`Analytics fetch error for ${timePeriod}:`, error);
           throw error;

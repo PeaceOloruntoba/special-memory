@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { useAnalyticsStore } from "../../store/useAnalytics";
 import {
@@ -28,6 +26,7 @@ import {
   BiTrendingUp,
   BiUser,
 } from "react-icons/bi";
+import { useNavigate } from "react-router";
 
 interface ProgressBarProps {
   value: number;
@@ -94,9 +93,11 @@ export default function AnalyticsPage() {
   const { user } = useAuthStore();
   const [timePeriod, setTimePeriod] = useState("6months");
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     if (user) {
-      fetchAnalytics(timePeriod);
+      fetchAnalytics(timePeriod, navigate);
     }
   }, [timePeriod, fetchAnalytics, user]);
 
@@ -144,7 +145,7 @@ export default function AnalyticsPage() {
         <p className="text-xl text-red-500 mb-4">Error: {error}</p>
         <button
           className="bg-black/90 text-white hover:bg-black/80 px-4 py-2 rounded-md cursor-pointer"
-          onClick={() => fetchAnalytics(timePeriod)}
+          onClick={() => fetchAnalytics(timePeriod, navigate)}
         >
           Retry
         </button>
