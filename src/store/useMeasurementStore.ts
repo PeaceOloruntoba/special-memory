@@ -32,7 +32,7 @@ interface MeasurementState {
     garmentType: string;
     measurements: MeasurementDetail[];
     notes?: string;
-  }) => Promise<void>;
+  }, navigate: any) => Promise<void>;
   getAllMeasurements: (clientId?: string) => Promise<void>;
   getSingleMeasurement: (measurementId: string) => Promise<Measurement | null>;
   updateMeasurement: (
@@ -55,7 +55,7 @@ export const useMeasurementStore = create<MeasurementState>()(
        * Adds a new measurement record to the database and updates the store.
        * @param measurementData - The data for the new measurement (clientId, garmentType, measurements array, notes).
        */
-      addMeasurement: async (measurementData) => {
+      addMeasurement: async (measurementData, navigate) => {
         set({ isLoading: true, error: null });
         try {
           const response = await api.post(
@@ -74,7 +74,7 @@ export const useMeasurementStore = create<MeasurementState>()(
           }));
           toast.success("Measurement added successfully!");
         } catch (error: any) {
-          const { message } = handleError(error);
+          const { message } = handleError(error, navigate);
           set({ error: message, isLoading: false });
           throw error;
         }

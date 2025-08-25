@@ -25,6 +25,7 @@ import { useClientStore } from "../../store/useClientStore";
 import EditMeasurementModal from "../../components/measurements/EditMeasurementModal";
 import DeleteMeasurementModal from "../../components/measurements/DeleteMeasurementModal";
 import { LuRuler } from "react-icons/lu";
+import { useNavigate } from "react-router";
 
 interface MeasurementDetail {
   name: string;
@@ -132,6 +133,7 @@ const Measurements: React.FC = () => {
     { name: string; size: string }[]
   >([]);
   const [notes, setNotes] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     getAllClients();
@@ -191,7 +193,7 @@ const Measurements: React.FC = () => {
         garmentType,
         measurements: measurementDetails,
         notes: notes || undefined,
-      });
+      }, navigate);
       setClientId("");
       setGarmentType("");
       setMeasurementsForm({});
