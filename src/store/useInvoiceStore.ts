@@ -17,7 +17,7 @@ interface InvoiceState {
     invoiceNumber: string;
     dueDate: string;
     items: InvoiceItem[];
-  }) => Promise<void>;
+  }, navigate: any) => Promise<void>;
   getAllInvoices: (filterOptions?: {
     clientId?: string;
     projectId?: string;
@@ -46,7 +46,7 @@ export const useInvoiceStore = create<InvoiceState>()(
       error: null,
       lastFetched: null,
 
-      addInvoice: async (invoiceData) => {
+      addInvoice: async (invoiceData, navigate) => {
         set({ isLoading: true, error: null });
         try {
           const response = await api.post("/api/v1/invoices", invoiceData);
@@ -64,7 +64,7 @@ export const useInvoiceStore = create<InvoiceState>()(
           }));
           toast.success("Invoice added successfully!");
         } catch (error: any) {
-          const { message } = handleError(error);
+          const { message } = handleError(error, navigate);
           set({ error: message, isLoading: false });
           throw error;
         }

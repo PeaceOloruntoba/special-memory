@@ -16,6 +16,7 @@ import { useClientStore } from "../../store/useClientStore";
 import { useProjectStore } from "../../store/useProjectStore";
 import { FiPlus, FiMinus } from "react-icons/fi";
 import type { InvoiceItem } from "../../types/types";
+import { useNavigate } from "react-router";
 
 interface AddInvoiceModalProps {
   isOpen: boolean;
@@ -42,6 +43,8 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({
     dueDate: "",
     items: [{ description: "", quantity: 1, rate: 0, amount: 0 }],
   });
+
+  const navigate = useNavigate();
 
   const handleAddItem = () => {
     setFormData({
@@ -82,7 +85,7 @@ const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({
         invoiceNumber: formData.invoiceNumber,
         dueDate: formData.dueDate,
         items: formData.items,
-      });
+      }, navigate);
       onClose();
     } catch (error) {
       // Error handled via store toast
