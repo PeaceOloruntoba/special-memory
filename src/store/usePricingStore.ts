@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { toast } from "sonner";
 import api from "../utils/api"; // Import the Axios instance
+import { handleError } from "../utils/handleError";
 
 type PricingStore = {
   currentPlan: string;
@@ -44,9 +44,8 @@ const usePricingStore = create<PricingStore>((set, get) => ({
         isLoading: false,
       });
     } catch (err: any) {
-      const errMsg = err.message || "Failed to fetch subscription details";
-      set({ isLoading: false, error: errMsg });
-      toast.error(errMsg);
+      const { message } = handleError(err);
+      set({ isLoading: false, error: message });
     }
   },
 
@@ -65,9 +64,8 @@ const usePricingStore = create<PricingStore>((set, get) => ({
       });
       get().fetchSubscriptionDetails();
     } catch (err: any) {
-      const errMsg = err.message || "Subscription failed";
-      set({ isLoading: false, error: errMsg });
-      toast.error(errMsg);
+      const { message } = handleError(err);
+      set({ isLoading: false, error: message });
       throw err;
     }
   },
@@ -83,9 +81,8 @@ const usePricingStore = create<PricingStore>((set, get) => ({
       });
       get().fetchSubscriptionDetails();
     } catch (err: any) {
-      const errMsg = err.message || "Cancellation failed";
-      set({ isLoading: false, error: errMsg });
-      toast.error(errMsg);
+      const { message } = handleError(err);
+      set({ isLoading: false, error: message });
       throw err;
     }
   },
@@ -103,9 +100,8 @@ const usePricingStore = create<PricingStore>((set, get) => ({
       });
       get().fetchSubscriptionDetails();
     } catch (err: any) {
-      const errMsg = err.message || "Failed to update payment method";
-      set({ isLoading: false, error: errMsg });
-      toast.error(errMsg);
+      const { message } = handleError(err);
+      set({ isLoading: false, error: message });
       throw err;
     }
   },

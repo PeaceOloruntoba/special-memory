@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import api from "../utils/api";
 import { toast } from "sonner";
 import type { Invoice, InvoiceItem } from "../types/types";
+import { handleError } from "../utils/handleError";
 
 interface InvoiceState {
   invoices: Invoice[];
@@ -63,10 +64,8 @@ export const useInvoiceStore = create<InvoiceState>()(
           }));
           toast.success("Invoice added successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to add invoice.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -100,10 +99,8 @@ export const useInvoiceStore = create<InvoiceState>()(
           });
           toast.success("Invoices loaded successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to load invoices.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -122,10 +119,8 @@ export const useInvoiceStore = create<InvoiceState>()(
           set({ isLoading: false, error: null });
           return fetchedInvoice;
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to load invoice details.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -153,10 +148,8 @@ export const useInvoiceStore = create<InvoiceState>()(
           }));
           toast.success("Invoice updated successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to update invoice.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -173,10 +166,8 @@ export const useInvoiceStore = create<InvoiceState>()(
           }));
           toast.success("Invoice deleted successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to delete invoice.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },

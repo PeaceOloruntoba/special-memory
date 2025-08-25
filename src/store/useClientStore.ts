@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import api from "../utils/api";
 import { toast } from "sonner";
+import { handleError } from "../utils/handleError";
 
 interface Client {
   id: string;
@@ -67,10 +68,9 @@ export const useClientStore = create<ClientState>()(
           }));
           toast.success("Client added successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to add client.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          console.log(error)
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -96,10 +96,8 @@ export const useClientStore = create<ClientState>()(
           });
           toast.success("Clients loaded successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to load clients.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -118,10 +116,8 @@ export const useClientStore = create<ClientState>()(
           set({ isLoading: false, error: null });
           return fetchedClient;
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to load client details.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -149,10 +145,8 @@ export const useClientStore = create<ClientState>()(
           }));
           toast.success("Client updated successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to update client.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -169,10 +163,8 @@ export const useClientStore = create<ClientState>()(
           }));
           toast.success("Client deleted successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to delete client.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },

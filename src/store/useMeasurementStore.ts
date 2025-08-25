@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import api from "../utils/api";
 import { toast } from "sonner";
+import { handleError } from "../utils/handleError";
 
 interface MeasurementDetail {
   name: string;
@@ -73,10 +74,8 @@ export const useMeasurementStore = create<MeasurementState>()(
           }));
           toast.success("Measurement added successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to add measurement.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -106,10 +105,8 @@ export const useMeasurementStore = create<MeasurementState>()(
           });
           toast.success("Measurements loaded successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to load measurements.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -135,11 +132,8 @@ export const useMeasurementStore = create<MeasurementState>()(
           set({ isLoading: false, error: null });
           return fetchedMeasurement;
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message ||
-            "Failed to load measurement details.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -170,10 +164,8 @@ export const useMeasurementStore = create<MeasurementState>()(
           }));
           toast.success("Measurement updated successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to update measurement.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -196,10 +188,8 @@ export const useMeasurementStore = create<MeasurementState>()(
           }));
           toast.success("Measurement deleted successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to delete measurement.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import api from "../utils/api";
 import { toast } from "sonner";
+import { handleError } from "../utils/handleError";
 
 interface Project {
   id: string;
@@ -77,10 +78,8 @@ export const useProjectStore = create<ProjectState>()(
           }));
           toast.success("Project added successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to add project.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -113,10 +112,8 @@ export const useProjectStore = create<ProjectState>()(
           });
           toast.success("Projects loaded successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to load projects.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -140,10 +137,8 @@ export const useProjectStore = create<ProjectState>()(
           set({ isLoading: false, error: null });
           return fetchedProject;
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to load project details.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -176,10 +171,8 @@ export const useProjectStore = create<ProjectState>()(
           }));
           toast.success("Project updated successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to update project.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -200,10 +193,8 @@ export const useProjectStore = create<ProjectState>()(
           }));
           toast.success("Project deleted successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to delete project.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },

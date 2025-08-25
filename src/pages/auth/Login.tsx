@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { FiScissors, FiEye, FiEyeOff, FiArrowRight } from "react-icons/fi";
-import { FaFacebook, FaGoogle } from "react-icons/fa";
+import { FaFacebook } from "react-icons/fa";
 import Button from "../../components/ui/Button";
 import { useAuthStore } from "../../store/useAuthStore";
 import Label from "../../components/ui/Label";
 import Input from "../../components/ui/Input";
 import Checkbox from "../../components/ui/Checkbox";
 import Spinner from "../../components/ui/Spinner";
+import { loadFacebookSDK } from "../../utils/facebook";
+import { toast } from "sonner";
+import { GoogleLogin } from "@react-oauth/google";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,7 +20,8 @@ export default function Login() {
     rememberMe: false,
   });
 
-  const { login, isLoading } = useAuthStore();
+  const { login, loginWithGoogle, loginWithFacebook, isLoading } =
+    useAuthStore();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,6 +33,25 @@ export default function Login() {
       console.error("Login failed:", err);
     }
   };
+
+  async function handleFacebookLogin() {
+    try {
+      await loadFacebookSDK();
+      (window as any).FB.login(
+        async (response: any) => {
+          if (response.authResponse?.accessToken) {
+            await loginWithFacebook(response.authResponse.accessToken);
+            navigate("/dashboard");
+          } else {
+            toast.error("Facebook login was not authorized");
+          }
+        },
+        { scope: "public_profile,email" }
+      );
+    } catch (e) {
+      toast.error("Facebook SDK failed to load");
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center p-4">
@@ -175,16 +198,26 @@ export default function Login() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
+                <GoogleLogin
+                  onSuccess={async (credentialResponse) => {
+                    const idToken = credentialResponse.credential;
+                    if (idToken) {
+                      await loginWithGoogle(idToken);
+                      navigate("/dashboard");
+                    } else {
+                      toast.error("No Google credential received");
+                    }
+                  }}
+                  onError={() => toast.error("Google login failed")}
+                  useOneTap
+                  text="signin_with"
+                  shape="pill"
+                />
                 <Button
                   className="w-full h-10 px-4 py-2 flex items-center justify-center rounded-md text-gray-700 border border-gray-300 bg-transparent hover:bg-gray-100 transition-colors"
                   disabled={isLoading}
-                >
-                  <FaGoogle className="h-4 w-4 mr-2" />
-                  Google
-                </Button>
-                <Button
-                  className="w-full h-10 px-4 py-2 flex items-center justify-center rounded-md text-gray-700 border border-gray-300 bg-transparent hover:bg-gray-100 transition-colors"
-                  disabled={isLoading}
+                  type="button"
+                  onClick={handleFacebookLogin}
                 >
                   <FaFacebook className="h-4 w-4 mr-2" />
                   Facebook

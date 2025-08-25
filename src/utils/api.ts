@@ -1,7 +1,6 @@
 import axios, {
   type AxiosInstance,
   type InternalAxiosRequestConfig,
-  type AxiosResponse,
 } from "axios";
 import { useAuthStore } from "../store/useAuthStore";
 
@@ -25,13 +24,13 @@ api.interceptors.request.use(
 );
 
 
-api.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  (error) => {
-    const message =
-      error.response?.data?.error?.message || "An unexpected error occurred";
-    return Promise.reject({ message, status: error.response?.status || 500 });
-  }
-);
+// api.interceptors.response.use(
+//   (response: AxiosResponse) => response,
+//   (error) => {
+//     const message =
+//       error.response?.data?.error?.message || "An unexpected error occurred";
+//     return Promise.reject({ message, status: error.response?.status || 500 });
+//   }
+// );
 
 export default api;

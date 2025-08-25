@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import api from "../utils/api";
 import { toast } from "sonner";
+import { handleError } from "../utils/handleError";
 
 interface User {
   isAdmin?: boolean;
@@ -36,6 +37,8 @@ interface AuthState {
 
   sendAccountVerificationOtp: (email: string) => Promise<void>;
   verifyAccountOtp: (email: string, otp: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
+  loginWithFacebook: (accessToken: string) => Promise<void>;
 
   sendPasswordResetOtp: (email: string) => Promise<void>;
   resetPasswordWithOtp: (
@@ -90,13 +93,9 @@ export const useAuthStore = create<AuthState>()(
               "Failed to re-initialize auth or token expired:",
               error
             );
-
+            const { message } = handleError(error);
             get().logout();
-            const errorMessage =
-              error.response?.data?.message ||
-              "Session expired. Please log in again.";
-            toast.error(errorMessage);
-            set({ error: errorMessage, isLoading: false });
+            set({ error: message, isLoading: false });
           }
         } else {
           set({ isLoading: false });
@@ -115,10 +114,8 @@ export const useAuthStore = create<AuthState>()(
           toast.success("Registration successful! Please verify your email.");
           navigate("/verify-otp?email=" + userData.email);
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Registration failed";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -151,10 +148,73 @@ export const useAuthStore = create<AuthState>()(
           });
           toast.success("Logged in successfully!");
         } catch (error: any) {
-          const errorMessage = error.response?.data?.message || "Login failed";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
+        }
+      },
+
+      loginWithGoogle: async (idToken) => {
+        set({ isLoading: true, error: null });
+        try {
+          const res = await api.post("/api/v1/auth/oauth/google", { idToken });
+          const { token, user: u } = res.data.data;
+          api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+          set({
+            user: {
+              id: u.id || u._id,
+              email: u.email,
+              firstName: u.firstName,
+              lastName: u.lastName,
+              businessName: u.businessName,
+              businessType: u.businessType,
+              isEmailVerified: u.isEmailVerified,
+              image: u.image,
+              plan: u.plan,
+              isSubActive: u.isSubActive,
+              trialEndDate: u.trialEndDate,
+            },
+            token,
+            isLoading: false,
+          });
+          toast.success("Logged in with Google!");
+        } catch (err: any) {
+          const { message } = handleError(err);
+          set({ error: message, isLoading: false });
+          throw err;
+        }
+      },
+
+      loginWithFacebook: async (accessToken) => {
+        set({ isLoading: true, error: null });
+        try {
+          const res = await api.post("/api/v1/auth/oauth/facebook", {
+            accessToken,
+          });
+          const { token, user: u } = res.data.data;
+          api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+          set({
+            user: {
+              id: u.id || u._id,
+              email: u.email,
+              firstName: u.firstName,
+              lastName: u.lastName,
+              businessName: u.businessName,
+              businessType: u.businessType,
+              isEmailVerified: u.isEmailVerified,
+              image: u.image,
+              plan: u.plan,
+              isSubActive: u.isSubActive,
+              trialEndDate: u.trialEndDate,
+            },
+            token,
+            isLoading: false,
+          });
+          toast.success("Logged in with Facebook!");
+        } catch (err: any) {
+          const { message } = handleError(err);
+          set({ error: message, isLoading: false });
+          throw err;
         }
       },
 
@@ -173,10 +233,8 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: false });
           toast.success(`Verification code sent to ${email}`);
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to send verification code";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -191,10 +249,8 @@ export const useAuthStore = create<AuthState>()(
           });
           toast.success("Account verified successfully! You can now log in.");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "OTP verification failed";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -206,10 +262,8 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: false });
           toast.success(`Password reset code sent to ${email}`);
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to send reset code";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },
@@ -230,10 +284,8 @@ export const useAuthStore = create<AuthState>()(
             "Password has been reset successfully! Please log in with your new password."
           );
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Password reset failed";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           throw error;
         }
       },

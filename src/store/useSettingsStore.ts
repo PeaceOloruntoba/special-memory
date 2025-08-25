@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { toast } from "sonner";
 import api from "../utils/api"; // Your custom API instance
+import { handleError } from "../utils/handleError";
 
 // --- Interfaces for User Data and Settings ---
 
@@ -100,10 +101,8 @@ export const useSettingsStore = create<SettingsStore>()(
             lastFetched: Date.now(),
           });
         } catch (error: any) {
-          const errMsg =
-            error.response?.data?.message || "Failed to fetch settings";
-          set({ error: errMsg, isLoading: false });
-          toast.error(errMsg);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
         }
       },
 
@@ -117,10 +116,8 @@ export const useSettingsStore = create<SettingsStore>()(
           set({ user: response.data.data.user, isUpdating: false });
           toast.success("Profile updated successfully");
         } catch (error: any) {
-          const errMsg =
-            error.response?.data?.message || "Failed to update profile";
-          set({ error: errMsg, isUpdating: false });
-          toast.error(errMsg);
+          const { message } = handleError(error);
+          set({ error: message, isUpdating: false });
           throw error;
         }
       },
@@ -134,10 +131,8 @@ export const useSettingsStore = create<SettingsStore>()(
           set({ user: response.data.data.user, isUpdating: false });
           toast.success("Notifications updated successfully");
         } catch (error: any) {
-          const errMsg =
-            error.response?.data?.message || "Failed to update notifications";
-          set({ error: errMsg, isUpdating: false });
-          toast.error(errMsg);
+          const { message } = handleError(error);
+          set({ error: message, isUpdating: false });
           throw error;
         }
       },
@@ -151,10 +146,8 @@ export const useSettingsStore = create<SettingsStore>()(
           set({ user: response.data.data.user, isUpdating: false });
           toast.success("Preferences updated successfully");
         } catch (error: any) {
-          const errMsg =
-            error.response?.data?.message || "Failed to update preferences";
-          set({ error: errMsg, isUpdating: false });
-          toast.error(errMsg);
+          const { message } = handleError(error);
+          set({ error: message, isUpdating: false });
           throw error;
         }
       },
@@ -169,10 +162,8 @@ export const useSettingsStore = create<SettingsStore>()(
           set({ isUpdating: false });
           toast.success("Password updated successfully");
         } catch (error: any) {
-          const errMsg =
-            error.response?.data?.message || "Failed to update password";
-          set({ error: errMsg, isUpdating: false });
-          toast.error(errMsg);
+          const { message } = handleError(error);
+          set({ error: message, isUpdating: false });
           throw error;
         }
       },
@@ -188,10 +179,8 @@ export const useSettingsStore = create<SettingsStore>()(
           set({ user: response.data.data.user, isUpdating: false });
           toast.success("Profile image updated successfully");
         } catch (error: any) {
-          const errMsg =
-            error.response?.data?.message || "Failed to update profile image";
-          set({ error: errMsg, isUpdating: false });
-          toast.error(errMsg);
+          const { message } = handleError(error);
+          set({ error: message, isUpdating: false });
           throw error;
         }
       },
@@ -202,11 +191,8 @@ export const useSettingsStore = create<SettingsStore>()(
           const response = await api.get(`${SUB_API_URL}/details`);
           set({ subscriptionDetails: response.data.data, isLoading: false });
         } catch (error: any) {
-          const errMsg =
-            error.response?.data?.message ||
-            "Failed to fetch subscription details";
-          set({ error: errMsg, isLoading: false });
-          toast.error(errMsg);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
         }
       },
 
@@ -218,10 +204,8 @@ export const useSettingsStore = create<SettingsStore>()(
           toast.success("Plan updated successfully");
           get().fetchSubscriptionDetails();
         } catch (error: any) {
-          const errMsg =
-            error.response?.data?.message || "Failed to subscribe to plan";
-          set({ error: errMsg, isUpdating: false });
-          toast.error(errMsg);
+          const { message } = handleError(error);
+          set({ error: message, isUpdating: false });
           throw error;
         }
       },
@@ -234,10 +218,8 @@ export const useSettingsStore = create<SettingsStore>()(
           toast.success("Subscription cancelled successfully");
           get().fetchSubscriptionDetails();
         } catch (error: any) {
-          const errMsg =
-            error.response?.data?.message || "Failed to cancel subscription";
-          set({ error: errMsg, isUpdating: false });
-          toast.error(errMsg);
+          const { message } = handleError(error);
+          set({ error: message, isUpdating: false });
           throw error;
         }
       },
@@ -250,10 +232,8 @@ export const useSettingsStore = create<SettingsStore>()(
           toast.success("Payment method updated successfully");
           get().fetchSubscriptionDetails();
         } catch (error: any) {
-          const errMsg =
-            error.response?.data?.message || "Failed to update payment method";
-          set({ error: errMsg, isUpdating: false });
-          toast.error(errMsg);
+          const { message } = handleError(error);
+          set({ error: message, isUpdating: false });
           throw error;
         }
       },
@@ -267,10 +247,8 @@ export const useSettingsStore = create<SettingsStore>()(
           // Clear the store and potentially redirect
           set({ user: null, subscriptionDetails: null });
         } catch (error: any) {
-          const errMsg =
-            error.response?.data?.message || "Failed to delete account";
-          set({ error: errMsg, isUpdating: false });
-          toast.error(errMsg);
+          const { message } = handleError(error);
+          set({ error: message, isUpdating: false });
           throw error;
         }
       },
@@ -286,10 +264,8 @@ export const useSettingsStore = create<SettingsStore>()(
           });
           toast.success(`2FA ${enable ? "enabled" : "disabled"} successfully`);
         } catch (error: any) {
-          const errMsg =
-            error.response?.data?.message || "Failed to toggle 2FA";
-          set({ error: errMsg, isUpdating: false });
-          toast.error(errMsg);
+          const { message } = handleError(error);
+          set({ error: message, isUpdating: false });
           throw error;
         }
       },
@@ -304,10 +280,8 @@ export const useSettingsStore = create<SettingsStore>()(
           });
           toast.success("Logged out from all sessions");
         } catch (error: any) {
-          const errMsg =
-            error.response?.data?.message || "Failed to logout all sessions";
-          set({ error: errMsg, isUpdating: false });
-          toast.error(errMsg);
+          const { message } = handleError(error);
+          set({ error: message, isUpdating: false });
           throw error;
         }
       },

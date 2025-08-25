@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import api from "../utils/api";
 import { toast } from "sonner";
+import { handleError } from "../utils/handleError";
 
 interface CalendarEvent {
   id: string;
@@ -97,10 +98,8 @@ export const useCalendarStore = create<CalendarState>()(
           }));
           toast.success("Event added successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to add event.";
-          set({ error: errorMessage, errorCode: null, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, errorCode: null, isLoading: false });
           throw error;
         }
       },
@@ -159,10 +158,8 @@ export const useCalendarStore = create<CalendarState>()(
             });
             return;
           }
-          const errorMessage =
-            error.response?.data?.message || "Failed to load calendar events.";
-          set({ error: errorMessage, errorCode: null, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, errorCode: null, isLoading: false });
           throw error;
         }
       },
@@ -185,10 +182,8 @@ export const useCalendarStore = create<CalendarState>()(
           set({ isLoading: false, error: null, errorCode: null });
           return fetchedEvent;
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to load event details.";
-          set({ error: errorMessage, errorCode: null, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, errorCode: null, isLoading: false });
           throw error;
         }
       },
@@ -222,10 +217,8 @@ export const useCalendarStore = create<CalendarState>()(
           }));
           toast.success("Event updated successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to update event.";
-          set({ error: errorMessage, errorCode: null, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, errorCode: null, isLoading: false });
           throw error;
         }
       },
@@ -248,10 +241,8 @@ export const useCalendarStore = create<CalendarState>()(
           }));
           toast.success("Event deleted successfully!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to delete event.";
-          set({ error: errorMessage, errorCode: null, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, errorCode: null, isLoading: false });
           throw error;
         }
       },

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import api from "../utils/api";
 import { toast } from "sonner";
+import { handleError } from "../utils/handleError";
 
 interface KeyMetrics {
   totalRevenue: number;
@@ -114,11 +115,8 @@ export const useAnalyticsStore = create<AnalyticsState>()(
             `Analytics data for ${timePeriod} loaded successfully!`
           );
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message ||
-            `Failed to fetch analytics data for ${timePeriod}.`;
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           console.error(`Analytics fetch error for ${timePeriod}:`, error);
           throw error;
         }

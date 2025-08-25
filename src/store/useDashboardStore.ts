@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import api from "../utils/api";
 import { toast } from "sonner";
+import { handleError } from "../utils/handleError";
 
 interface RevenueStats {
   currentMonth: number;
@@ -72,10 +73,8 @@ export const useDashboardStore = create<DashboardState>()(
           });
           toast.success("Dashboard data refreshed!");
         } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Failed to fetch dashboard stats.";
-          set({ error: errorMessage, isLoading: false });
-          toast.error(errorMessage);
+          const { message } = handleError(error);
+          set({ error: message, isLoading: false });
           console.error("Dashboard fetch error:", error);
         }
       },

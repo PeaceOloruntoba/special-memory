@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import api from "../utils/api";
 import { toast } from "sonner";
+import { handleError } from "../utils/handleError";
 
 interface Pattern {
   _id: string;
@@ -60,7 +61,8 @@ export const usePatternStore = create<PatternStore>()(
           const { data } = await api.get("/api/v1/patterns");
           set({ userPatterns: data.data.patterns });
         } catch (err: any) {
-          set({ error: err.message });
+          const { message } = handleError(err);
+          set({ error: message });
         } finally {
           set({ loading: false });
         }
@@ -72,7 +74,8 @@ export const usePatternStore = create<PatternStore>()(
           const { data } = await api.get("api/v1/patterns/public");
           set({ publicPatterns: data.data.patterns });
         } catch (err: any) {
-          set({ error: err.message });
+          const { message } = handleError(err);
+          set({ error: message });
         } finally {
           set({ loading: false });
         }
@@ -91,7 +94,8 @@ export const usePatternStore = create<PatternStore>()(
           await get().fetchPublicPatterns();
           toast.success("Pattern created successfully");
         } catch (err: any) {
-          set({ error: err.message });
+          const { message } = handleError(err);
+          set({ error: message });
         } finally {
           set({ loading: false });
         }
@@ -106,7 +110,8 @@ export const usePatternStore = create<PatternStore>()(
           await get().fetchPublicPatterns();
           toast.success("Pattern updated successfully");
         } catch (err: any) {
-          set({ error: err.message });
+          const { message } = handleError(err);
+          set({ error: message });
         } finally {
           set({ loading: false });
         }
@@ -120,7 +125,8 @@ export const usePatternStore = create<PatternStore>()(
           await get().fetchPublicPatterns();
           toast.success("Pattern deleted successfully");
         } catch (err: any) {
-          set({ error: err.message });
+          const { message } = handleError(err);
+          set({ error: message });
         } finally {
           set({ loading: false });
         }
@@ -132,7 +138,8 @@ export const usePatternStore = create<PatternStore>()(
           const { data } = await api.get(`api/v1/patterns/${patternId}`);
           return data.data.pattern;
         } catch (err: any) {
-          set({ error: err.message });
+          const { message } = handleError(err);
+          set({ error: message });
           return undefined;
         } finally {
           set({ loading: false });
@@ -147,8 +154,8 @@ export const usePatternStore = create<PatternStore>()(
           await get().fetchPublicPatterns();
           toast.success("Pattern moved to public library successfully!");
         } catch (err: any) {
-          set({ error: err.message });
-          toast.error("Failed to move pattern to public library.");
+          const { message } = handleError(err);
+          set({ error: message });
         } finally {
           set({ loading: false });
         }
