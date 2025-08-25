@@ -37,9 +37,9 @@ interface AddEventModalProps {
   onClose: () => void;
 }
 
-const navigate = useNavigate();
 
 const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
   const { addEvent } = useCalendarStore();
   const { clients } = useClientStore();
   const [newEvent, setNewEvent] = useState({
@@ -208,6 +208,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
 };
 
 export default function Calendar() {
+  const navigate = useNavigate();
   const { events, isLoading, error, errorCode, featureLocked, getAllEvents } =
     useCalendarStore();
   const { clients, getAllClients } = useClientStore();
