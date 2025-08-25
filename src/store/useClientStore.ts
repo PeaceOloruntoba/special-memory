@@ -30,7 +30,7 @@ interface ClientState {
     phone?: string;
     address?: string;
     notes?: string;
-  }) => Promise<void>;
+  }, navigate: any) => Promise<void>;
   getAllClients: () => Promise<void>;
   getSingleClient: (clientId: string) => Promise<Client | null>;
   updateClient: (
@@ -49,7 +49,7 @@ export const useClientStore = create<ClientState>()(
       error: null,
       lastFetched: null,
 
-      addClient: async (clientData) => {
+      addClient: async (clientData, navigate) => {
         set({ isLoading: true, error: null });
         try {
           const response = await api.post("/api/v1/clients", clientData);
@@ -69,7 +69,7 @@ export const useClientStore = create<ClientState>()(
           toast.success("Client added successfully!");
         } catch (error: any) {
           console.log(error)
-          const { message } = handleError(error);
+          const { message } = handleError(error, navigate);
           set({ error: message, isLoading: false });
           throw error;
         }

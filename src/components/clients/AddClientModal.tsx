@@ -6,6 +6,7 @@ import Label from "../ui/Label";
 import Textarea from "../ui/Textarea";
 import { useClientStore } from "../../store/useClientStore";
 import Spinner from "../ui/Spinner";
+import { useNavigate } from "react-router";
 
 interface AddClientModalProps {
   isOpen: boolean;
@@ -21,16 +22,20 @@ const AddClientModal: React.FC<AddClientModalProps> = ({ isOpen, onClose }) => {
     notes: "",
   });
   const { addClient, isLoading } = useClientStore();
+  const navigate = useNavigate();
 
   const handleAddClient = async () => {
     try {
-      await addClient({
-        name: newClient.name,
-        email: newClient.email,
-        phone: newClient.phone || undefined,
-        address: newClient.address || undefined,
-        notes: newClient.notes || undefined,
-      });
+      await addClient(
+        {
+          name: newClient.name,
+          email: newClient.email,
+          phone: newClient.phone || undefined,
+          address: newClient.address || undefined,
+          notes: newClient.notes || undefined,
+        },
+        navigate
+      );
       setNewClient({ name: "", email: "", phone: "", address: "", notes: "" });
       onClose();
     } catch (error) {
